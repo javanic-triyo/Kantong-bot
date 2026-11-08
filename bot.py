@@ -160,11 +160,35 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
                            f"Dibeli di {rp(p['harga'])}", "stop_sign", 4)
         # ---- sinyal dip + bounce
         hi24 = max(H[max(0, i - 96):i + 1])
+        turun = (1 - C[i] / hi24) * 100
         score = (any(r[j - 1] < 30 <= r[j] for j in range(max(1, i - 3), i + 1))
                  + (C[i] > e20[i]) + (min(L[i - 7:i + 1]) > min(L[i - 15:i - 7])) + (C[i] > O[i]))
-        if not (C[i] <= hi24 * (1 - dip / 100) and score >= 3):
+        coin_up = C[i] > eL[i] and eL[i] > eL[i - SLOPE]
+        coin_down = C[i] < eL[i] and eL[i] < eL[i - SLOPE]
+        btc_up = B[i] > bL[i]
+        btc_down = B[i] < bL[i] and bL[i] < bL[i - SLOPE]
+        merah = coin_down or btc_down
+        hijau = (not merah) and coin_up and btc_up
+        lampu_txt = "MERAH" if merah else ("HIJAU" if hijau else "KUNING")
+        segar = T[i] + BAR >= time.time() - 3600           # alert hanya untuk kejadian 1 jam terakhir
+        sinyal = turun >= dip and score >= 3
+
+        # ---- ALERT tahap 1: turun tajam, belum mantul
+        warn_pct = max(1.5 * dip, 6.0)
+        low_baru = L[i] <= min(L[max(0, i - 96):i])         # titik terendah baru dalam 24 jam
+        if (not sinyal and turun >= warn_pct and low_baru and segar
+                and T[i] - k.get("last_warn_ts", 0) >= CFG.get("alert_jeda_jam", 6) * 3600):
+            k["last_warn_ts"] = T[i]
+            notify(f"TURUN TAJAM - {name(sym)}",
+                   f"Harga {rp(C[i])} ({tstr} WIB), turun {turun:.1f}% dari high 24 jam ({rp(hi24)}), "
+                   f"titik terendah baru 24 jam.\n"
+                   f"Belum ada tanda mantul (skor bounce {score}/4), tunggu alert bounce.\n"
+                   f"Lampu {lampu_txt}.", "warning", 3)
+        if not sinyal:
             continue
+
         # ---- kantong DIP & HOLD: beli porsi tetap saat dip, tidak pernah jual
+        dh_txt = ""
         porsi = CFG["dip_hold_porsi"]
         if dh["cash"] >= porsi and T[i] - dh.get("last_buy_ts", 0) >= CFG["dip_hold_jeda_jam"] * 3600:
             dh["cash"] -= porsi
@@ -172,39 +196,54 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
             dh["last_buy_ts"] = T[i]
             dh["beli"].append({"harga": C[i], "waktu": tstr})
             avg = (CFG["modal_per_koin"] - dh["cash"]) * (1 - FEE) / dh["qty"]
-            notify(f"DIP & HOLD: beli {name(sym)} (paper)",
-                   f"Beli {rp(porsi)} di {rp(C[i])} ({tstr} WIB)\n"
-                   f"Pembelian ke-{len(dh['beli'])}, sisa dana {rp(dh['cash'])}\n"
-                   f"Harga rata-rata sekarang {rp(avg)}. Tidak akan dijual (hold).", "shopping_cart", 3)
+            dh_txt = (f"Dip & hold ikut beli {rp(porsi)} (ke-{len(dh['beli'])}, sisa dana {rp(dh['cash'])}, "
+                      f"rata-rata {rp(avg)}).")
+
         # ---- kantong UTAMA (lampu + 2R/1R)
-        if k["posisi"] or T[i] - k.get("last_sig_ts", 0) < 4 * BAR:
-            continue
-        coin_up = C[i] > eL[i] and eL[i] > eL[i - SLOPE]
-        coin_down = C[i] < eL[i] and eL[i] < eL[i - SLOPE]
-        btc_up = B[i] > bL[i]
-        btc_down = B[i] < bL[i] and bL[i] < bL[i - SLOPE]
-        if coin_down or btc_down:                                 # lampu merah: tidak beli
+        alasan = None
+        if k["posisi"]:
+            alasan = "bot utama sudah pegang koin ini"
+        elif T[i] - k.get("last_sig_ts", 0) < 4 * BAR:
+            alasan = "bot utama baru saja beli"
+        elif merah:
+            alasan = "bot utama tidak beli karena tren sedang turun"
             if T[i] - k.get("last_red_ts", 0) >= 16 * BAR:        # hitung maks 1x per 4 jam
                 k["dilewati_merah"] = k.get("dilewati_merah", 0) + 1
             k["last_red_ts"] = T[i]
-            continue
-        hijau = coin_up and btc_up
-        size = 1.0 if hijau else 0.5
-        modal = k["cash"] * size
-        if modal < 10_000:                                        # minimum order Indodax
-            continue
-        k["last_sig_ts"] = T[i]
-        k["cash"] -= modal
-        qty = modal * (1 - FEE) / C[i]
-        k["posisi"] = {"harga": C[i], "qty": qty, "modal": modal, "tp": C[i] * (1 + tp),
-                       "sl": C[i] * (1 - sl), "waktu": tstr, "lampu": "hijau" if hijau else "kuning"}
-        lampu = "HIJAU, porsi penuh" if hijau else "KUNING, setengah porsi"
-        notify(f"SINYAL BELI - {name(sym)} (paper)",
-               f"Harga {rp(C[i])} ({tstr} WIB)\nLampu {lampu}: {rp(modal)}\n"
-               f"Target jual: {rp(C[i] * (1 + tp))} (+{tp * 100:.1f}%)\n"
-               f"Cut loss: {rp(C[i] * (1 - sl))} (-{sl * 100:.1f}%)\n"
-               f"Turun {(1 - C[i] / hi24) * 100:.1f}% dari high 24 jam, skor bounce {score}/4",
-               "green_circle" if hijau else "yellow_circle", 4)
+        else:
+            size = 1.0 if hijau else 0.5
+            modal = k["cash"] * size
+            if modal < 10_000:                                    # minimum order Indodax
+                alasan = "dana bot utama tidak cukup"
+            else:
+                k["last_sig_ts"] = T[i]
+                k["cash"] -= modal
+                qty = modal * (1 - FEE) / C[i]
+                k["posisi"] = {"harga": C[i], "qty": qty, "modal": modal, "tp": C[i] * (1 + tp),
+                               "sl": C[i] * (1 - sl), "waktu": tstr, "lampu": "hijau" if hijau else "kuning"}
+                lampu = "HIJAU, porsi penuh" if hijau else "KUNING, setengah porsi"
+                notify(f"SINYAL BELI - {name(sym)} (paper)",
+                       f"Harga {rp(C[i])} ({tstr} WIB)\nLampu {lampu}: {rp(modal)}\n"
+                       f"Target jual: {rp(C[i] * (1 + tp))} (+{tp * 100:.1f}%)\n"
+                       f"Cut loss: {rp(C[i] * (1 - sl))} (-{sl * 100:.1f}%)\n"
+                       f"Turun {turun:.1f}% dari high 24 jam, skor bounce {score}/4"
+                       + (f"\n{dh_txt}" if dh_txt else ""),
+                       "green_circle" if hijau else "yellow_circle", 4)
+                continue
+
+        # ---- ALERT tahap 2: bounce terdeteksi (bot utama tidak beli)
+        if segar and T[i] - k.get("last_bounce_ts", 0) >= CFG.get("bounce_jeda_jam", 4) * 3600:
+            k["last_bounce_ts"] = T[i]
+            notify(f"BOUNCE TERDETEKSI - {name(sym)}",
+                   f"Harga {rp(C[i])} ({tstr} WIB), turun {turun:.1f}% dari high 24 jam lalu mulai mantul "
+                   f"(skor bounce {score}/4).\nLampu {lampu_txt}: {alasan}.\n"
+                   + (dh_txt + "\n" if dh_txt else "")
+                   + "Mau ikut? Pakai tombol Beli di dashboard (kantong manual).",
+                   "white_check_mark", 4 if not merah else 3)
+        elif dh_txt:
+            notify(f"DIP & HOLD: beli {name(sym)} (paper)", f"Harga {rp(C[i])} ({tstr} WIB). {dh_txt}",
+                   "shopping_cart", 3)
+
     # status lampu saat ini (untuk dashboard)
     j = len(c) - 1
     if (C[j] < eL[j] and eL[j] < eL[j - SLOPE]) or (B[j] < bL[j] and bL[j] < bL[j - SLOPE]):

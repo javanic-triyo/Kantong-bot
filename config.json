@@ -9,5 +9,7 @@
   "dip_minimum_persen": 4.0,
   "jam_ringkasan_wib": 21,
   "dip_hold_porsi": 50000,
-  "dip_hold_jeda_jam": 24
+  "dip_hold_jeda_jam": 24,
+  "alert_jeda_jam": 12,
+  "bounce_jeda_jam": 8
 }
