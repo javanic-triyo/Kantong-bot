@@ -36,3 +36,10 @@ Modal pura-pura: Rp200.000 per koin (lihat `config.json`).
 ## Catatan
 
 Hasil backtest 80 hari (5 koin): rule ini rata-rata **+7,8%**, sedangkan hold **+17%**. Saat pasar turun, rule ini jauh lebih aman (sekitar −5% dibanding hold −24%). Hasil masa lalu tidak menjamin hasil ke depan. Ini bukan saran keuangan.
+
+## Dashboard
+
+Grafik saldo, status lampu tiap koin, posisi terbuka, dan riwayat trade:
+https://javanic-triyo.github.io/Kantong-bot/
+
+Data dashboard (`docs/data.json`) diperbarui setiap bot jalan, dan saldo dicatat ke grafik setiap jam.

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kantong Bot · Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface-1: #fcfcfb; --border: rgba(11,11,11,0.10);
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7;
+    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+    --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+    --up: #006300; --down: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface-1: #1a1a19; --border: rgba(255,255,255,0.10);
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835;
+      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+      --up: #0ca30c; --down: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text-primary);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 16px 14px 40px; }
+  h1 { font-size: 22px; margin: 4px 0 2px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin: 0 0 16px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+          padding: 14px; margin-bottom: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .tiles { grid-template-columns: 1fr; } }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .tile .lbl { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; }
+  .key { width: 14px; height: 3px; border-radius: 2px; flex: none; }
+  .tile .val { font-size: 22px; font-weight: 650; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .tile .pct { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--text-secondary); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  #chart { position: relative; }
+  #chart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
+         border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.12);
+         min-width: 170px; display: none; z-index: 2; }
+  .tip .t { color: var(--text-secondary); margin-bottom: 4px; }
+  .tip .row { display: flex; align-items: center; gap: 8px; }
+  .tip .row b { font-variant-numeric: tabular-nums; }
+  .tip .row .n { color: var(--text-secondary); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--text-secondary); font-weight: 500; padding: 6px 6px; border-bottom: 1px solid var(--grid); }
+  td { padding: 7px 6px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  td.r, th.r { text-align: right; }
+  .scroll { overflow-x: auto; }
+  .lamp { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  details summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; margin-top: 8px; }
+  .small { color: var(--text-secondary); font-size: 12px; }
+  .empty { color: var(--muted); font-size: 13px; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Kantong Bot</h1>
+  <p class="sub" id="sub">Paper trading (uang pura-pura) · memuat data…</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <h2>Saldo dari waktu ke waktu</h2>
+    <div class="legend" id="legend"></div>
+    <div id="chart"></div>
+    <div class="note" id="chartnote"></div>
+    <details>
+      <summary>Lihat data grafik (tabel)</summary>
+      <div class="scroll"><table id="histtable"></table></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Status koin</h2>
+    <div class="scroll"><table id="koin"></table></div>
+    <p class="small">Lampu: 🟢 Hijau = boleh beli penuh · 🟡 Kuning = setengah porsi · 🔴 Merah = tidak beli.
+      R = rata-rata naik-turun harian.</p>
+  </section>
+
+  <section class="card">
+    <h2>Posisi terbuka · Bot utama</h2>
+    <div class="scroll"><table id="posisi"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Kantong Dip &amp; Hold</h2>
+    <div class="scroll"><table id="dh"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Riwayat trade · Bot utama</h2>
+    <div class="scroll"><table id="riwayat"></table></div>
+  </section>
+
+  <footer>Simulasi saja, tidak ada uang asli. Bukan saran keuangan.</footer>
+</main>
+
+<script>
+const SERIES = [
+  { key: "bot",  label: "Bot utama (lampu + 2R/1R)", short: "Bot utama", color: "var(--series-1)" },
+  { key: "dh",   label: "Dip & hold",                short: "Dip & hold", color: "var(--series-2)" },
+  { key: "hold", label: "Hold dari awal",            short: "Hold",       color: "var(--series-3)" },
+];
+const rp = x => {
+  if (x == null) return "-";
+  if (x < 0) return "-" + rp(-x);
+  if (Math.abs(x) < 1 && x !== 0) return "Rp" + x.toFixed(6).replace(/0+$/, "").replace(".", ",");
+  if (Math.abs(x) < 100) return "Rp" + x.toFixed(2).replace(".", ",");
+  return "Rp" + Math.round(x).toLocaleString("id-ID");
+};
+const pct = (x, d = 1) => (x > 0 ? "+" : "") + x.toFixed(d).replace(".", ",") + "%";
+const cls = x => x > 0.05 ? "up" : x < -0.05 ? "down" : "flat";
+const el = (tag, attrs = {}, text) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  return e;
+};
+const fmtTime = t => new Date(t * 1000).toLocaleString("id-ID", { timeZone: "Asia/Jakarta",
+  day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+const LAMP = { hijau: ["var(--good)", "Hijau"], kuning: ["var(--warning)", "Kuning"], merah: ["var(--critical)", "Merah"] };
+
+function table(id, head, rows, rightCols = []) {
+  const t = document.getElementById(id); t.textContent = "";
+  if (!rows.length) { const tr = el("tr"); const td = el("td", {}, "Belum ada."); td.className = "empty";
+    td.colSpan = head.length; tr.append(td); t.append(tr); return; }
+  const thr = el("tr");
+  head.forEach((h, i) => { const th = el("th", {}, h); if (rightCols.includes(i)) th.className = "r"; thr.append(th); });
+  t.append(thr);
+  rows.forEach(r => {
+    const tr = el("tr");
+    r.forEach((c, i) => {
+      const td = el("td"); if (rightCols.includes(i)) td.className = "r";
+      if (c instanceof Node) td.append(c); else td.textContent = c;
+      tr.append(td);
+    });
+    t.append(tr);
+  });
+}
+function colored(text, x) { const s = el("span", {}, text); s.className = cls(x); return s; }
+
+function drawChart(d) {
+  const box = document.getElementById("chart");
+  box.textContent = "";
+  const H = d.histori;
+  const W = Math.max(320, box.clientWidth), Ht = W < 500 ? 230 : 280;
+  const m = { l: 62, r: 78, t: 12, b: 26 };
+  const iw = W - m.l - m.r, ih = Ht - m.t - m.b;
+  const vals = H.flatMap(p => SERIES.map(s => p[s.key])).concat([d.modal]);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const pad = Math.max((hi - lo) * 0.12, d.modal * 0.01); lo -= pad; hi += pad;
+  const t0 = H[0].t, t1 = H.length > 1 ? H[H.length - 1].t : H[0].t + 3600;
+  const x = t => m.l + (H.length > 1 ? (t - t0) / (t1 - t0) * iw : iw / 2);
+  const y = v => m.t + (hi - v) / (hi - lo) * ih;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${Ht}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "Grafik saldo tiga strategi dari waktu ke waktu");
+  const add = (tag, a) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); svg.append(e); return e; };
+  // grid + y labels
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const v = lo + (hi - lo) * i / ticks, yy = y(v);
+    add("line", { x1: m.l, x2: m.l + iw, y1: yy, y2: yy, stroke: "var(--grid)", "stroke-width": 1 });
+    const tx = add("text", { x: m.l - 8, y: yy + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" });
+    tx.textContent = (v / 1000).toFixed(0) + "rb";
+  }
+  // modal reference line
+  add("line", { x1: m.l, x2: m.l + iw, y1: y(d.modal), y2: y(d.modal), stroke: "var(--axis)", "stroke-width": 1.5, "stroke-dasharray": "4 4" });
+  // x labels
+  const nx = Math.min(W < 500 ? 3 : 4, H.length);
+  const longSpan = t1 - t0 > 36 * 3600;
+  const xfmt = t => new Date(t * 1000).toLocaleString("id-ID", longSpan
+    ? { timeZone: "Asia/Jakarta", day: "numeric", month: "short" }
+    : { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" });
+  for (let i = 0; i < nx; i++) {
+    const p = H[Math.round(i * (H.length - 1) / Math.max(1, nx - 1))];
+    const tx = add("text", { x: x(p.t), y: Ht - 6, "text-anchor": i === 0 && H.length > 1 ? "start" : i === nx - 1 && H.length > 1 ? "end" : "middle",
+      "font-size": 11, fill: "var(--muted)" });
+    tx.textContent = xfmt(p.t);
+  }
+  // lines + end labels
+  const ends = [];
+  SERIES.forEach(s => {
+    if (H.length > 1) {
+      add("path", { d: H.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p[s.key]).toFixed(1)).join(" "),
+        fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" });
+    }
+    const last = H[H.length - 1];
+    add("circle", { cx: x(last.t), cy: y(last[s.key]), r: 4, fill: s.color, stroke: "var(--surface-1)", "stroke-width": 2 });
+    ends.push({ s, y: y(last[s.key]) });
+  });
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 14) ends[i].y = ends[i - 1].y + 14;
+  ends.forEach(e => { const tx = add("text", { x: m.l + iw + 8, y: e.y + 4, "font-size": 11, fill: "var(--text-secondary)" });
+    tx.textContent = e.s.short; });
+  // crosshair + tooltip
+  const cross = add("line", { y1: m.t, y2: m.t + ih, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden" });
+  const dots = SERIES.map(s => add("circle", { r: 4, fill: s.color, stroke: "var(--surface-1)", "stroke-width": 2, visibility: "hidden" }));
+  const hit = add("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" });
+  box.append(svg);
+  const tip = el("div"); tip.className = "tip"; box.append(tip);
+  function show(ev) {
+    const r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * W / r.width;
+    let best = 0, bd = Infinity;
+    H.forEach((p, i) => { const dd = Math.abs(x(p.t) - sx); if (dd < bd) { bd = dd; best = i; } });
+    const p = H[best], px = x(p.t);
+    cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
+    SERIES.forEach((s, i) => { dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", y(p[s.key])); dots[i].setAttribute("visibility", "visible"); });
+    tip.textContent = "";
+    tip.append(el("div", { class: "t" }, fmtTime(p.t) + " WIB"));
+    SERIES.forEach(s => {
+      const row = el("div", { class: "row" });
+      const k = el("span", { class: "key" }); k.style.background = s.color;
+      row.append(k, el("b", {}, rp(p[s.key])), el("span", { class: "n" }, s.short));
+      tip.append(row);
+    });
+    tip.style.display = "block";
+    const left = px * r.width / W;
+    tip.style.left = Math.min(Math.max(0, left + 12), r.width - tip.offsetWidth) + "px";
+    tip.style.top = "8px";
+    if (left + 12 + tip.offsetWidth > r.width) tip.style.left = Math.max(0, left - tip.offsetWidth - 12) + "px";
+  }
+  function hide() { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); dots.forEach(c => c.setAttribute("visibility", "hidden")); }
+  hit.addEventListener("pointermove", show); hit.addEventListener("pointerdown", show);
+  hit.addEventListener("pointerleave", hide);
+}
+
+function render(d) {
+  document.getElementById("sub").textContent =
+    `Paper trading (uang pura-pura) · diperbarui ${d.diperbarui} · mulai ${d.mulai}`;
+  // tiles
+  const tiles = document.getElementById("tiles"); tiles.textContent = "";
+  SERIES.forEach(s => {
+    const v = d.sekarang[s.key], p = (v / d.modal - 1) * 100;
+    const t = el("div", { class: "tile" });
+    const l = el("div", { class: "lbl" }); const k = el("span", { class: "key" }); k.style.background = s.color;
+    l.append(k, document.createTextNode(s.label));
+    t.append(l, el("div", { class: "val" }, rp(v)));
+    const pc = el("div", { class: "pct" }); pc.append(colored(pct(p), p), document.createTextNode(" dari modal " + rp(d.modal)));
+    t.append(pc); tiles.append(t);
+  });
+  // legend
+  const lg = document.getElementById("legend"); lg.textContent = "";
+  SERIES.forEach(s => { const sp = el("span"); const k = el("span", { class: "key" }); k.style.background = s.color;
+    sp.append(k, document.createTextNode(s.label)); lg.append(sp); });
+  drawChart(d);
+  document.getElementById("chartnote").textContent = d.histori.length < 3
+    ? "Grafik baru mulai: bot mencatat saldo setiap jam, jadi garisnya akan terisi pelan-pelan."
+    : `${d.histori.length} titik data, dicatat setiap jam. Garis putus-putus = modal awal.`;
+  table("histtable", ["Waktu (WIB)", "Bot utama", "Dip & hold", "Hold"],
+    d.histori.slice().reverse().map(p => [fmtTime(p.t), rp(p.bot), rp(p.dh), rp(p.hold)]), [1, 2, 3]);
+  // koin
+  table("koin", ["Koin", "Harga", "24 jam", "Lampu", "R"],
+    d.koin.map(k => {
+      const [c, lbl] = LAMP[k.lampu] || ["var(--muted)", "-"];
+      const lamp = el("span", { class: "lamp" }); const dot = el("span", { class: "dot" }); dot.style.background = c;
+      lamp.append(dot, document.createTextNode(lbl));
+      return [k.nama, rp(k.harga), k.chg24 == null ? "-" : colored(pct(k.chg24), k.chg24), lamp, k.R ? k.R.toFixed(1).replace(".", ",") + "%" : "-"];
+    }), [1, 2]);
+  // posisi
+  table("posisi", ["Koin", "Beli", "Sekarang", "Target", "Cut loss", "Modal"],
+    d.koin.filter(k => k.posisi).map(k => {
+      const p = k.posisi, ch = (k.harga / p.harga - 1) * 100;
+      const now = el("span"); now.append(document.createTextNode(rp(k.harga) + " "), colored(pct(ch), ch));
+      return [k.nama, rp(p.harga) + " · " + p.waktu, now, rp(p.tp), rp(p.sl), rp(p.modal) + " (" + p.lampu + ")"];
+    }));
+  // dip & hold
+  table("dh", ["Koin", "Dibeli", "Harga rata-rata", "Nilai sekarang", "Sisa dana"],
+    d.koin.filter(k => k.dh_beli > 0).map(k => {
+      const avg = k.dh_modal * (1 - d.fee) / k.dh_qty, val = k.dh_qty * k.harga * (1 - d.fee), ch = (val / k.dh_modal - 1) * 100;
+      const v = el("span"); v.append(document.createTextNode(rp(val) + " "), colored(pct(ch), ch));
+      return [k.nama, k.dh_beli + "x (" + rp(k.dh_modal) + ")", rp(avg), v, rp(k.dh_cash)];
+    }), [2, 3, 4]);
+  // riwayat
+  table("riwayat", ["Waktu jual", "Koin", "Beli → Jual", "Hasil"],
+    d.riwayat.slice().reverse().map(t => [t.waktu, t.koin, rp(t.beli) + " → " + rp(t.jual),
+      colored((t.hasil === "TP" ? "Target " : "Cut loss ") + rp(t.laba) + " (" + pct(t.pct) + ")", t.laba)]), [3]);
+}
+
+let DATA = null;
+fetch("data.json?" + Date.now()).then(r => r.json()).then(d => { DATA = d; render(d); })
+  .catch(() => { document.getElementById("sub").textContent = "Data belum tersedia. Coba lagi beberapa menit lagi."; });
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && drawChart(DATA), 150); });
+</script>
+</body>
+</html>

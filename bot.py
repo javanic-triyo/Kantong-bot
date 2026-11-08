@@ -205,15 +205,50 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
                f"Cut loss: {rp(C[i] * (1 - sl))} (-{sl * 100:.1f}%)\n"
                f"Turun {(1 - C[i] / hi24) * 100:.1f}% dari high 24 jam, skor bounce {score}/4",
                "green_circle" if hijau else "yellow_circle", 4)
+    # status lampu saat ini (untuk dashboard)
+    j = len(c) - 1
+    if (C[j] < eL[j] and eL[j] < eL[j - SLOPE]) or (B[j] < bL[j] and bL[j] < bL[j - SLOPE]):
+        k["lampu_now"] = "merah"
+    elif C[j] > eL[j] and eL[j] > eL[j - SLOPE] and B[j] > bL[j]:
+        k["lampu_now"] = "hijau"
+    else:
+        k["lampu_now"] = "kuning"
+    k["chg24"] = round((C[j] / C[max(0, j - 96)] - 1) * 100, 1)
     return C[-1]
 
 
-def summary(state, last_px, reason="Ringkasan harian"):
-    eq = equity(state, last_px)
+def values(state, last_px):
     modal = CFG["modal_per_koin"] * len(state["koin"])
+    eq = equity(state, last_px)
     hold = sum(CFG["modal_per_koin"] * (1 - FEE) ** 2 * last_px[s] / state["harga_awal"][s] for s in state["koin"])
+    dh_val = sum(d["cash"] + d["qty"] * last_px[s] * (1 - FEE) for s, d in state.get("dip_hold", {}).items())
+    return modal, eq, dh_val, hold
+
+
+def write_dashboard(state, last_px, now_wib):
+    modal, eq, dh_val, hold = values(state, last_px)
+    hist = state.setdefault("histori", [])
+    now = int(time.time())
+    if not hist or now - hist[-1]["t"] >= 3600 - 120:            # catat 1x per jam
+        hist.append({"t": now, "bot": round(eq), "dh": round(dh_val), "hold": round(hold)})
+    koin = []
+    for s, k in state["koin"].items():
+        d = state["dip_hold"][s]
+        koin.append({"nama": name(s), "harga": last_px[s], "chg24": k.get("chg24"), "lampu": k.get("lampu_now"),
+                     "R": k.get("R"), "posisi": k["posisi"],
+                     "dh_beli": len(d["beli"]), "dh_qty": d["qty"], "dh_cash": d["cash"],
+                     "dh_modal": CFG["modal_per_koin"] - d["cash"]})
+    out = {"diperbarui": now_wib.strftime("%d/%m/%Y %H:%M WIB"), "mulai": state["mulai"],
+           "dh_mulai": state.get("dip_hold_mulai", state["mulai"]), "modal": modal, "fee": FEE,
+           "sekarang": {"bot": round(eq), "dh": round(dh_val), "hold": round(hold)},
+           "histori": hist, "koin": koin, "riwayat": state["riwayat"][-50:]}
+    os.makedirs(os.path.join(HERE, "docs"), exist_ok=True)
+    json.dump(out, open(os.path.join(HERE, "docs", "data.json"), "w"))
+
+
+def summary(state, last_px, reason="Ringkasan harian"):
+    modal, eq, dh_val, hold = values(state, last_px)
     dh = state.get("dip_hold", {})
-    dh_val = sum(d["cash"] + d["qty"] * last_px[s] * (1 - FEE) for s, d in dh.items())
     dh_mulai = state.get("dip_hold_mulai", state["mulai"])
     lines = ["PERBANDINGAN (modal " + rp(modal) + " masing-masing):",
              f"- Bot lampu + 2R/1R: {rp(eq)} ({(eq / modal - 1) * 100:+.1f}%)",
@@ -282,6 +317,7 @@ def main():
         summary(state, last_px)
         state["ringkasan_terakhir"] = today
     state["terakhir_cek"] = now_wib.strftime("%d/%m/%Y %H:%M WIB")
+    write_dashboard(state, last_px, now_wib)
     save_state(state)
 
 
