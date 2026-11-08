@@ -10,7 +10,7 @@
     --page: #f9f9f7; --surface-1: #fcfcfb; --border: rgba(11,11,11,0.10);
     --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
     --grid: #e1e0d9; --axis: #c3c2b7;
-    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
     --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
     --up: #006300; --down: #d03b3b;
   }
@@ -20,7 +20,7 @@
       --page: #0d0d0d; --surface-1: #1a1a19; --border: rgba(255,255,255,0.10);
       --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
       --grid: #2c2c2a; --axis: #383835;
-      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
       --up: #0ca30c; --down: #e66767;
     }
   }
@@ -33,8 +33,8 @@
   .sub { color: var(--text-secondary); font-size: 13px; margin: 0 0 16px; }
   .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
           padding: 14px; margin-bottom: 14px; }
-  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-  @media (max-width: 560px) { .tiles { grid-template-columns: 1fr; } }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .tile .val { font-size: 19px; } .tile .pct { font-size: 12px; } }
   .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
   .tile .lbl { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; }
   .key { width: 14px; height: 3px; border-radius: 2px; flex: none; }
@@ -63,6 +63,12 @@
   details summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; margin-top: 8px; }
   .small { color: var(--text-secondary); font-size: 12px; }
   .empty { color: var(--muted); font-size: 13px; }
+  .btns { display: flex; gap: 10px; margin: 4px 0 12px; }
+  .btn { flex: 1; text-align: center; padding: 12px; border-radius: 10px; font-weight: 600; text-decoration: none;
+         border: 1px solid var(--border); color: var(--text-primary); background: var(--page); }
+  .btn.buy { border-color: var(--good); } .btn.sell { border-color: var(--critical); }
+  .cash { font-size: 14px; margin: 0 0 10px; }
+  ol.steps { margin: 6px 0 0 18px; padding: 0; color: var(--text-secondary); font-size: 13px; }
   footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
 </style>
 </head>
@@ -101,6 +107,32 @@
     <div class="scroll"><table id="dh"></table></div>
   </section>
 
+  <section class="card" id="manualcard">
+    <h2>Trading manual kamu (paper)</h2>
+    <p class="small">Modal pura-pura Rp1.000.000 terpisah. Keputusan 100% dari kamu, bot tidak ikut campur.</p>
+    <div class="btns">
+      <a class="btn buy" id="btnbuy" target="_blank" rel="noopener">Beli</a>
+      <a class="btn sell" id="btnsell" target="_blank" rel="noopener">Jual</a>
+    </div>
+    <details>
+      <summary>Cara pakai tombol Beli / Jual</summary>
+      <ol class="steps">
+        <li>Tombol membuka halaman GitHub. Login kalau diminta.</li>
+        <li>Tap <b>Run workflow</b>, pilih koin, beli/jual, dan jumlah Rupiah (atau "semua").</li>
+        <li>Tap <b>Run workflow</b> hijau. Sekitar 30 detik kemudian ada notifikasi di ntfy dan dashboard ini ikut berubah.</li>
+      </ol>
+    </details>
+    <p class="cash" id="mcash"></p>
+    <div class="scroll"><table id="mpos"></table></div>
+    <h2 style="margin-top:14px">Riwayat manual</h2>
+    <div class="scroll"><table id="mriwayat"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Riwayat beli · Dip &amp; Hold</h2>
+    <div class="scroll"><table id="dhriwayat"></table></div>
+  </section>
+
   <section class="card">
     <h2>Riwayat trade · Bot utama</h2>
     <div class="scroll"><table id="riwayat"></table></div>
@@ -110,11 +142,13 @@
 </main>
 
 <script>
-const SERIES = [
-  { key: "bot",  label: "Bot utama (lampu + 2R/1R)", short: "Bot utama", color: "var(--series-1)" },
-  { key: "dh",   label: "Dip & hold",                short: "Dip & hold", color: "var(--series-2)" },
-  { key: "hold", label: "Hold dari awal",            short: "Hold",       color: "var(--series-3)" },
+const ALL_SERIES = [
+  { key: "bot",    label: "Bot utama (lampu + 2R/1R)", short: "Bot utama",  color: "var(--series-1)" },
+  { key: "dh",     label: "Dip & hold",                short: "Dip & hold", color: "var(--series-2)" },
+  { key: "hold",   label: "Hold dari awal",            short: "Hold",       color: "var(--series-3)" },
+  { key: "manual", label: "Kamu (manual)",             short: "Kamu",       color: "var(--series-4)" },
 ];
+let SERIES = ALL_SERIES.slice(0, 3);
 const rp = x => {
   if (x == null) return "-";
   if (x < 0) return "-" + rp(-x);
@@ -160,7 +194,7 @@ function drawChart(d) {
   const W = Math.max(320, box.clientWidth), Ht = W < 500 ? 230 : 280;
   const m = { l: 62, r: 78, t: 12, b: 26 };
   const iw = W - m.l - m.r, ih = Ht - m.t - m.b;
-  const vals = H.flatMap(p => SERIES.map(s => p[s.key])).concat([d.modal]);
+  const vals = H.flatMap(p => SERIES.map(s => p[s.key])).filter(v => v != null).concat([d.modal]);
   let lo = Math.min(...vals), hi = Math.max(...vals);
   const pad = Math.max((hi - lo) * 0.12, d.modal * 0.01); lo -= pad; hi += pad;
   const t0 = H[0].t, t1 = H.length > 1 ? H[H.length - 1].t : H[0].t + 3600;
@@ -197,11 +231,13 @@ function drawChart(d) {
   // lines + end labels
   const ends = [];
   SERIES.forEach(s => {
-    if (H.length > 1) {
-      add("path", { d: H.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p[s.key]).toFixed(1)).join(" "),
+    const pts = H.filter(p => p[s.key] != null);
+    if (!pts.length) return;
+    if (pts.length > 1) {
+      add("path", { d: pts.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p[s.key]).toFixed(1)).join(" "),
         fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" });
     }
-    const last = H[H.length - 1];
+    const last = pts[pts.length - 1];
     add("circle", { cx: x(last.t), cy: y(last[s.key]), r: 4, fill: s.color, stroke: "var(--surface-1)", "stroke-width": 2 });
     ends.push({ s, y: y(last[s.key]) });
   });
@@ -221,10 +257,12 @@ function drawChart(d) {
     H.forEach((p, i) => { const dd = Math.abs(x(p.t) - sx); if (dd < bd) { bd = dd; best = i; } });
     const p = H[best], px = x(p.t);
     cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
-    SERIES.forEach((s, i) => { dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", y(p[s.key])); dots[i].setAttribute("visibility", "visible"); });
+    SERIES.forEach((s, i) => { if (p[s.key] == null) { dots[i].setAttribute("visibility", "hidden"); return; }
+      dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", y(p[s.key])); dots[i].setAttribute("visibility", "visible"); });
     tip.textContent = "";
     tip.append(el("div", { class: "t" }, fmtTime(p.t) + " WIB"));
     SERIES.forEach(s => {
+      if (p[s.key] == null) return;
       const row = el("div", { class: "row" });
       const k = el("span", { class: "key" }); k.style.background = s.color;
       row.append(k, el("b", {}, rp(p[s.key])), el("span", { class: "n" }, s.short));
@@ -242,12 +280,14 @@ function drawChart(d) {
 }
 
 function render(d) {
+  SERIES = ALL_SERIES.filter(s => s.key !== "manual" || d.sekarang.manual != null);
   document.getElementById("sub").textContent =
     `Paper trading (uang pura-pura) · diperbarui ${d.diperbarui} · mulai ${d.mulai}`;
   // tiles
   const tiles = document.getElementById("tiles"); tiles.textContent = "";
   SERIES.forEach(s => {
-    const v = d.sekarang[s.key], p = (v / d.modal - 1) * 100;
+    const base = s.key === "manual" ? 1000000 : d.modal;
+    const v = d.sekarang[s.key], p = (v / base - 1) * 100;
     const t = el("div", { class: "tile" });
     const l = el("div", { class: "lbl" }); const k = el("span", { class: "key" }); k.style.background = s.color;
     l.append(k, document.createTextNode(s.label));
@@ -263,8 +303,9 @@ function render(d) {
   document.getElementById("chartnote").textContent = d.histori.length < 3
     ? "Grafik baru mulai: bot mencatat saldo setiap jam, jadi garisnya akan terisi pelan-pelan."
     : `${d.histori.length} titik data, dicatat setiap jam. Garis putus-putus = modal awal.`;
-  table("histtable", ["Waktu (WIB)", "Bot utama", "Dip & hold", "Hold"],
-    d.histori.slice().reverse().map(p => [fmtTime(p.t), rp(p.bot), rp(p.dh), rp(p.hold)]), [1, 2, 3]);
+  table("histtable", ["Waktu (WIB)", "Bot utama", "Dip & hold", "Hold"].concat(SERIES.length > 3 ? ["Kamu"] : []),
+    d.histori.slice().reverse().map(p => [fmtTime(p.t), rp(p.bot), rp(p.dh), rp(p.hold)]
+      .concat(SERIES.length > 3 ? [p.manual == null ? "-" : rp(p.manual)] : [])), [1, 2, 3, 4]);
   // koin
   table("koin", ["Koin", "Harga", "24 jam", "Lampu", "R"],
     d.koin.map(k => {
@@ -287,6 +328,24 @@ function render(d) {
       const v = el("span"); v.append(document.createTextNode(rp(val) + " "), colored(pct(ch), ch));
       return [k.nama, k.dh_beli + "x (" + rp(k.dh_modal) + ")", rp(avg), v, rp(k.dh_cash)];
     }), [2, 3, 4]);
+  // manual
+  const wf = `https://github.com/${d.repo}/actions/workflows/manual.yml`;
+  document.getElementById("btnbuy").href = wf; document.getElementById("btnsell").href = wf;
+  const M = d.manual;
+  document.getElementById("mcash").textContent = M
+    ? `Sisa dana: ${rp(M.cash)} · mulai ${M.mulai}` : "Belum ada trade manual. Sisa dana: Rp1.000.000";
+  table("mpos", ["Koin", "Modal", "Harga rata-rata", "Nilai sekarang"],
+    (M ? M.posisi : []).map(p => {
+      const avg = p.modal * (1 - d.fee) / p.qty, val = p.qty * p.harga * (1 - d.fee), ch = (val / p.modal - 1) * 100;
+      const v = el("span"); v.append(document.createTextNode(rp(val) + " "), colored(pct(ch), ch));
+      return [p.koin, rp(p.modal), rp(avg), v];
+    }), [1, 2, 3]);
+  table("mriwayat", ["Waktu", "Koin", "Aksi", "Harga", "Jumlah"],
+    (M ? M.riwayat.slice().reverse() : []).map(t => [t.waktu, t.koin,
+      t.aksi === "beli" ? "Beli" : colored("Jual " + rp(t.laba) + " (" + pct(t.pct) + ")", t.laba),
+      rp(t.harga), rp(t.rp)]), [3, 4]);
+  table("dhriwayat", ["Waktu", "Koin", "Harga beli"],
+    (d.dh_beli || []).slice().reverse().map(b => [b.waktu, b.koin, rp(b.harga)]), [2]);
   // riwayat
   table("riwayat", ["Waktu jual", "Koin", "Beli → Jual", "Hasil"],
     d.riwayat.slice().reverse().map(t => [t.waktu, t.koin, rp(t.beli) + " → " + rp(t.jual),

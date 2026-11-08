@@ -43,3 +43,7 @@ Grafik saldo, status lampu tiap koin, posisi terbuka, dan riwayat trade:
 https://javanic-triyo.github.io/Kantong-bot/
 
 Data dashboard (`docs/data.json`) diperbarui setiap bot jalan, dan saldo dicatat ke grafik setiap jam.
+
+## Trading manual (kantong ke-4)
+
+Modal pura-pura Rp1.000.000 untuk keputusanmu sendiri. Tombol **Beli / Jual** di dashboard membuka workflow **Trade Manual**: pilih koin, beli/jual, dan jumlah Rupiah (atau "semua"), lalu Run workflow. Harga eksekusi adalah harga terakhir Indodax saat itu, ditambah fee 0,3%.

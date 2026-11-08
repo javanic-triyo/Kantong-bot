@@ -225,12 +225,23 @@ def values(state, last_px):
     return modal, eq, dh_val, hold
 
 
-def write_dashboard(state, last_px, now_wib):
+def manual_value(state, last_px):
+    m = state.get("manual")
+    if not m:
+        return None
+    return m["cash"] + sum(p["qty"] * last_px[s] * (1 - FEE) for s, p in m["koin"].items())
+
+
+def write_dashboard(state, last_px, now_wib, catat_histori=True):
     modal, eq, dh_val, hold = values(state, last_px)
+    man = manual_value(state, last_px)
     hist = state.setdefault("histori", [])
     now = int(time.time())
-    if not hist or now - hist[-1]["t"] >= 3600 - 120:            # catat 1x per jam
-        hist.append({"t": now, "bot": round(eq), "dh": round(dh_val), "hold": round(hold)})
+    if catat_histori and (not hist or now - hist[-1]["t"] >= 3600 - 120):   # catat 1x per jam
+        row = {"t": now, "bot": round(eq), "dh": round(dh_val), "hold": round(hold)}
+        if man is not None:
+            row["manual"] = round(man)
+        hist.append(row)
     koin = []
     for s, k in state["koin"].items():
         d = state["dip_hold"][s]
@@ -238,10 +249,23 @@ def write_dashboard(state, last_px, now_wib):
                      "R": k.get("R"), "posisi": k["posisi"],
                      "dh_beli": len(d["beli"]), "dh_qty": d["qty"], "dh_cash": d["cash"],
                      "dh_modal": CFG["modal_per_koin"] - d["cash"]})
+    dh_beli = []
+    for s, d in state["dip_hold"].items():
+        for b in d["beli"]:
+            dh_beli.append({"koin": name(s), "harga": b["harga"], "waktu": b["waktu"]})
+    sekarang = {"bot": round(eq), "dh": round(dh_val), "hold": round(hold)}
+    manual = None
+    if state.get("manual"):
+        m = state["manual"]; sekarang["manual"] = round(man)
+        manual = {"mulai": m["mulai"], "cash": m["cash"], "modal": 1_000_000,
+                  "posisi": [{"koin": name(s), "qty": p["qty"], "modal": p["modal"], "harga": last_px[s]}
+                             for s, p in m["koin"].items() if p["qty"] > 0],
+                  "riwayat": m["riwayat"][-50:]}
     out = {"diperbarui": now_wib.strftime("%d/%m/%Y %H:%M WIB"), "mulai": state["mulai"],
            "dh_mulai": state.get("dip_hold_mulai", state["mulai"]), "modal": modal, "fee": FEE,
-           "sekarang": {"bot": round(eq), "dh": round(dh_val), "hold": round(hold)},
-           "histori": hist, "koin": koin, "riwayat": state["riwayat"][-50:]}
+           "sekarang": sekarang, "histori": hist, "koin": koin, "riwayat": state["riwayat"][-50:],
+           "dh_beli": dh_beli[-50:], "manual": manual,
+           "repo": "javanic-triyo/Kantong-bot"}
     os.makedirs(os.path.join(HERE, "docs"), exist_ok=True)
     json.dump(out, open(os.path.join(HERE, "docs", "data.json"), "w"))
 
@@ -253,7 +277,11 @@ def summary(state, last_px, reason="Ringkasan harian"):
     lines = ["PERBANDINGAN (modal " + rp(modal) + " masing-masing):",
              f"- Bot lampu + 2R/1R: {rp(eq)} ({(eq / modal - 1) * 100:+.1f}%)",
              f"- Dip & hold: {rp(dh_val)} ({(dh_val / modal - 1) * 100:+.1f}%), mulai {dh_mulai}",
-             f"- Hold dari awal: {rp(hold)} ({(hold / modal - 1) * 100:+.1f}%)", ""]
+             f"- Hold dari awal: {rp(hold)} ({(hold / modal - 1) * 100:+.1f}%)"]
+    man = manual_value(state, last_px)
+    if man is not None:
+        lines.append(f"- Kamu (manual): {rp(man)} ({(man / 1_000_000 - 1) * 100:+.1f}%)")
+    lines.append("")
     if dh:
         beli = sum(len(d["beli"]) for d in dh.values())
         lines.append(f"Dip & hold: sudah beli {beli}x, sisa dana {rp(sum(d['cash'] for d in dh.values()))}")
