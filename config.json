@@ -1,0 +1,11 @@
+{
+  "coins": ["XRPIDR", "UAIIDR", "HYPEIDR", "PEPEIDR", "SOLIDR"],
+  "btc_symbol": "BTCIDR",
+  "modal_per_koin": 200000,
+  "fee_per_sisi": 0.003,
+  "tp_kali_R": 2.0,
+  "sl_kali_R": 1.0,
+  "dip_kali_R": 0.6,
+  "dip_minimum_persen": 4.0,
+  "jam_ringkasan_wib": 21
+}
