@@ -1,0 +1,45 @@
+{
+ "mulai": "08/11/2026 17:47 WIB",
+ "harga_awal": {
+  "XRPIDR": 20940,
+  "UAIIDR": 1435,
+  "HYPEIDR": 1392391,
+  "PEPEIDR": 0.08883,
+  "SOLIDR": 1610383
+ },
+ "koin": {
+  "XRPIDR": {
+   "cash": 200000.0,
+   "posisi": null,
+   "last_ts": 1794133800,
+   "R": 4.25
+  },
+  "UAIIDR": {
+   "cash": 200000.0,
+   "posisi": null,
+   "last_ts": 1794133800,
+   "R": 21.09
+  },
+  "HYPEIDR": {
+   "cash": 200000.0,
+   "posisi": null,
+   "last_ts": 1794133800,
+   "R": 4.63
+  },
+  "PEPEIDR": {
+   "cash": 200000.0,
+   "posisi": null,
+   "last_ts": 1794133800,
+   "R": 8.52
+  },
+  "SOLIDR": {
+   "cash": 200000.0,
+   "posisi": null,
+   "last_ts": 1794133800,
+   "R": 3.04
+  }
+ },
+ "riwayat": [],
+ "ringkasan_terakhir": "",
+ "terakhir_cek": "08/11/2026 17:47 WIB"
+}
