@@ -69,6 +69,16 @@
   .btn.buy { border-color: var(--good); } .btn.sell { border-color: var(--critical); }
   .cash { font-size: 14px; margin: 0 0 10px; }
   ol.steps { margin: 6px 0 0 18px; padding: 0; color: var(--text-secondary); font-size: 13px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .seg button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+                border: 1px solid var(--border); background: var(--page); color: var(--text-secondary); }
+  .seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+  .pricehead { display: flex; align-items: baseline; gap: 10px; margin: 2px 0 6px; flex-wrap: wrap; }
+  .pricehead .big { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  #pchart { position: relative; }
+  #pchart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .mlegend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+  .mlegend span { display: inline-flex; align-items: center; gap: 5px; }
   footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
 </style>
 </head>
@@ -78,6 +88,16 @@
   <p class="sub" id="sub">Paper trading (uang pura-pura) · memuat data…</p>
 
   <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <h2>Grafik harga koin</h2>
+    <div class="seg" id="coinbtns" role="group" aria-label="Pilih koin"></div>
+    <div class="seg" id="rangebtns" role="group" aria-label="Rentang waktu"></div>
+    <div class="pricehead"><span class="big" id="pnow"></span><span id="pchg"></span><span class="small" id="plamp"></span></div>
+    <div id="pchart"></div>
+    <div class="mlegend" id="mlegend"></div>
+    <p class="note">Garis putus-putus abu-abu = garis tren (rata-rata ~8 hari). Harga di bawah garis tren yang menurun = lampu merah.</p>
+  </section>
 
   <section class="card">
     <h2>Saldo dari waktu ke waktu</h2>
@@ -300,6 +320,7 @@ function render(d) {
   SERIES.forEach(s => { const sp = el("span"); const k = el("span", { class: "key" }); k.style.background = s.color;
     sp.append(k, document.createTextNode(s.label)); lg.append(sp); });
   drawChart(d);
+  priceControls(d);
   document.getElementById("chartnote").textContent = d.histori.length < 3
     ? "Grafik baru mulai: bot mencatat saldo setiap jam, jadi garisnya akan terisi pelan-pelan."
     : `${d.histori.length} titik data, dicatat setiap jam. Garis putus-putus = modal awal.`;
@@ -352,10 +373,136 @@ function render(d) {
       colored((t.hasil === "TP" ? "Target " : "Cut loss ") + rp(t.laba) + " (" + pct(t.pct) + ")", t.laba)]), [3]);
 }
 
+// ---------------- grafik harga per koin
+let PC = { coin: null, days: 3 };
+const MK = {
+  bot:    { label: "Bot utama", color: "var(--series-1)" },
+  dh:     { label: "Dip & hold", color: "var(--series-2)" },
+  manual: { label: "Kamu", color: "var(--series-4)" },
+};
+function parseW(w, d) {               // "08/11 18:15" (WIB) -> unix detik
+  if (!w) return null;
+  const m = w.match(/(\d+)\/(\d+)\s+(\d+):(\d+)/); if (!m) return null;
+  const yr = Number((d.diperbarui.match(/\/(\d{4})/) || [0, new Date().getFullYear()])[1]);
+  return Date.UTC(yr, m[2] - 1, m[1], m[3] - 7, m[4]) / 1000;
+}
+function markersFor(d, coin) {
+  const out = [];
+  const k = d.koin.find(x => x.nama === coin);
+  if (k && k.posisi) out.push({ who: "bot", buy: true, t: parseW(k.posisi.waktu, d), p: k.posisi.harga, txt: "Bot beli" });
+  d.riwayat.filter(r => r.koin === coin).forEach(r => {
+    if (r.waktu_beli) out.push({ who: "bot", buy: true, t: parseW(r.waktu_beli, d), p: r.beli, txt: "Bot beli" });
+    out.push({ who: "bot", buy: false, t: parseW(r.waktu, d), p: r.jual, txt: r.hasil === "TP" ? "Bot jual (target)" : "Bot jual (cut loss)" });
+  });
+  (d.dh_beli || []).filter(b => b.koin === coin).forEach(b => out.push({ who: "dh", buy: true, t: parseW(b.waktu, d), p: b.harga, txt: "Dip & hold beli" }));
+  if (d.manual) d.manual.riwayat.filter(r => r.koin === coin).forEach(r =>
+    out.push({ who: "manual", buy: r.aksi === "beli", t: parseW(r.waktu, d), p: r.harga, txt: r.aksi === "beli" ? "Kamu beli" : "Kamu jual" }));
+  return out.filter(m => m.t);
+}
+function drawPrice(d) {
+  const box = document.getElementById("pchart"); box.textContent = "";
+  const S = (d.seri || {})[PC.coin];
+  if (!S || !S.t.length) { box.append(el("p", { class: "empty" }, "Grafik koin muncul setelah bot jalan berikutnya.")); return; }
+  const tEnd = S.t[S.t.length - 1], tStart = tEnd - PC.days * 86400;
+  const idx = S.t.map((t, i) => i).filter(i => S.t[i] >= tStart);
+  const T = idx.map(i => S.t[i]), C = idx.map(i => S.c[i]), E = idx.map(i => S.ema[i]);
+  const k = d.koin.find(x => x.nama === PC.coin);
+  const mk = markersFor(d, PC.coin).filter(m => m.t >= T[0] - 900 && m.t <= tEnd + 900);
+  const lines = [];
+  if (k && k.posisi) { lines.push({ v: k.posisi.tp, lbl: "Target", c: "var(--good)" }); lines.push({ v: k.posisi.sl, lbl: "Cut loss", c: "var(--critical)" }); }
+  const W = Math.max(320, box.clientWidth), Ht = W < 500 ? 240 : 290;
+  const m = { l: 8, r: 70, t: 10, b: 26 };
+  const iw = W - m.l - m.r, ih = Ht - m.t - m.b;
+  const vals = C.concat(E, mk.map(z => z.p), lines.map(z => z.v));
+  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.08 || hi * 0.01; lo -= pad; hi += pad;
+  const x = t => m.l + (t - T[0]) / Math.max(1, tEnd - T[0]) * iw;
+  const y = v => m.t + (hi - v) / (hi - lo) * ih;
+  const NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${Ht}`); svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", `Grafik harga ${PC.coin} ${PC.days} hari terakhir`);
+  const add = (tag, a) => { const e = document.createElementNS(NS, tag); for (const q in a) e.setAttribute(q, a[q]); svg.append(e); return e; };
+  for (let i = 0; i <= 4; i++) {
+    const v = lo + (hi - lo) * i / 4, yy = y(v);
+    add("line", { x1: m.l, x2: m.l + iw, y1: yy, y2: yy, stroke: "var(--grid)", "stroke-width": 1 });
+    const tx = add("text", { x: m.l + iw + 6, y: yy + 4, "font-size": 11, fill: "var(--muted)" }); tx.textContent = rp(v).replace("Rp", "");
+  }
+  const nx = W < 500 ? 3 : 4;
+  for (let i = 0; i < nx; i++) {
+    const t = T[0] + (tEnd - T[0]) * i / (nx - 1);
+    const tx = add("text", { x: x(t), y: Ht - 6, "font-size": 11, fill: "var(--muted)", "text-anchor": i === 0 ? "start" : i === nx - 1 ? "end" : "middle" });
+    tx.textContent = new Date(t * 1000).toLocaleString("id-ID", PC.days > 1
+      ? { timeZone: "Asia/Jakarta", day: "numeric", month: "short", hour: "2-digit" } : { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" });
+  }
+  lines.forEach(L => {
+    add("line", { x1: m.l, x2: m.l + iw, y1: y(L.v), y2: y(L.v), stroke: L.c, "stroke-width": 1.5, "stroke-dasharray": "5 4" });
+    const tx = add("text", { x: m.l + 4, y: y(L.v) - 4, "font-size": 11, fill: "var(--text-secondary)" }); tx.textContent = L.lbl + " " + rp(L.v);
+  });
+  const path = arr => arr.map((v, i) => (i ? "L" : "M") + x(T[i]).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+  add("path", { d: path(E), fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "3 4" });
+  add("path", { d: path(C), fill: "none", stroke: "var(--text-primary)", "stroke-width": 2, "stroke-linejoin": "round" });
+  mk.forEach(z => {
+    const cx = x(Math.min(Math.max(z.t, T[0]), tEnd)), cy = y(z.p), s2 = 7;
+    const pts = z.buy ? `${cx},${cy - s2} ${cx - s2},${cy + s2 * 0.8} ${cx + s2},${cy + s2 * 0.8}` : `${cx},${cy + s2} ${cx - s2},${cy - s2 * 0.8} ${cx + s2},${cy - s2 * 0.8}`;
+    add("polygon", { points: pts, fill: MK[z.who].color, stroke: "var(--surface-1)", "stroke-width": 2 });
+  });
+  // crosshair
+  const cross = add("line", { y1: m.t, y2: m.t + ih, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden" });
+  const dot = add("circle", { r: 4, fill: "var(--text-primary)", stroke: "var(--surface-1)", "stroke-width": 2, visibility: "hidden" });
+  const hit = add("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" });
+  box.append(svg);
+  const tip = el("div"); tip.className = "tip"; box.append(tip);
+  function show(ev) {
+    const r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * W / r.width;
+    let bi = 0, bd = Infinity; T.forEach((t, i) => { const dd = Math.abs(x(t) - sx); if (dd < bd) { bd = dd; bi = i; } });
+    const px = x(T[bi]);
+    cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
+    dot.setAttribute("cx", px); dot.setAttribute("cy", y(C[bi])); dot.setAttribute("visibility", "visible");
+    tip.textContent = "";
+    tip.append(el("div", { class: "t" }, fmtTime(T[bi]) + " WIB"));
+    const pr = el("div", { class: "row" }); pr.append(el("b", {}, rp(C[bi]) + " " + PC.coin)); tip.append(pr);
+    const tr = el("div", { class: "row" }); tr.append(el("span", { class: "n" }, "Garis tren " + rp(E[bi]))); tip.append(tr);
+    mk.filter(z => Math.abs(z.t - T[bi]) <= 1800).forEach(z => {
+      const row = el("div", { class: "row" }); const kk = el("span", { class: "key" }); kk.style.background = MK[z.who].color;
+      row.append(kk, el("span", {}, z.txt + " " + rp(z.p))); tip.append(row);
+    });
+    tip.style.display = "block";
+    const left = px * r.width / W;
+    tip.style.left = (left + 12 + tip.offsetWidth > r.width ? Math.max(0, left - tip.offsetWidth - 12) : left + 12) + "px";
+    tip.style.top = "8px";
+  }
+  hit.addEventListener("pointermove", show); hit.addEventListener("pointerdown", show);
+  hit.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); });
+  // header
+  document.getElementById("pnow").textContent = PC.coin + " " + rp(C[C.length - 1]);
+  const ch = (C[C.length - 1] / C[0] - 1) * 100, pc = document.getElementById("pchg"); pc.textContent = "";
+  pc.append(colored(pct(ch), ch), document.createTextNode(` dalam ${PC.days} hari`));
+  const [lc, ll] = LAMP[k && k.lampu] || ["var(--muted)", "-"];
+  const pl = document.getElementById("plamp"); pl.textContent = "";
+  const ld = el("span", { class: "dot" }); ld.style.background = lc; pl.append(ld, document.createTextNode(" Lampu " + ll));
+  // legend markers
+  const lg = document.getElementById("mlegend"); lg.textContent = "";
+  const tri = (c, up) => { const sv = document.createElementNS(NS, "svg"); sv.setAttribute("width", 12); sv.setAttribute("height", 12);
+    const pg = document.createElementNS(NS, "polygon"); pg.setAttribute("points", up ? "6,1 1,11 11,11" : "6,11 1,1 11,1"); pg.setAttribute("fill", c); sv.append(pg); return sv; };
+  const it = (node, txt) => { const sp = el("span"); sp.append(node, document.createTextNode(txt)); lg.append(sp); };
+  it(tri("var(--text-secondary)", true), "beli"); it(tri("var(--text-secondary)", false), "jual");
+  Object.values(MK).forEach(v => { const kk = el("span", { class: "key" }); kk.style.background = v.color; it(kk, v.label); });
+}
+function priceControls(d) {
+  const coins = d.koin.map(k => k.nama);
+  if (!PC.coin) PC.coin = coins[0];
+  const cb = document.getElementById("coinbtns"); cb.textContent = "";
+  coins.forEach(c => { const b = el("button", { type: "button", "aria-pressed": String(c === PC.coin) }, c);
+    b.onclick = () => { PC.coin = c; priceControls(d); }; cb.append(b); });
+  const rb = document.getElementById("rangebtns"); rb.textContent = "";
+  [[1, "1 hari"], [3, "3 hari"], [7, "7 hari"]].forEach(([n, l]) => { const b = el("button", { type: "button", "aria-pressed": String(n === PC.days) }, l);
+    b.onclick = () => { PC.days = n; priceControls(d); }; rb.append(b); });
+  drawPrice(d);
+}
+
 let DATA = null;
 fetch("data.json?" + Date.now()).then(r => r.json()).then(d => { DATA = d; render(d); })
   .catch(() => { document.getElementById("sub").textContent = "Data belum tersedia. Coba lagi beberapa menit lagi."; });
-let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && drawChart(DATA), 150); });
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (DATA) { drawChart(DATA); drawPrice(DATA); } }, 150); });
 </script>
 </body>
 </html>

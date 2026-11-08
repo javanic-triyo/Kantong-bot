@@ -148,7 +148,7 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
                 uang = p["qty"] * px * (1 - FEE)
                 laba = uang - p["modal"]; pct = laba / p["modal"] * 100
                 k["cash"] += uang; k["posisi"] = None
-                state["riwayat"].append({"koin": name(sym), "beli": p["harga"], "jual": px, "hasil": hasil,
+                state["riwayat"].append({"koin": name(sym), "beli": p["harga"], "waktu_beli": p["waktu"], "jual": px, "hasil": hasil,
                                          "laba": round(laba), "pct": round(pct, 1), "waktu": tstr})
                 if hasil == "TP":
                     notify(f"TARGET TERCAPAI - {name(sym)} (paper)",
@@ -214,7 +214,9 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
     else:
         k["lampu_now"] = "kuning"
     k["chg24"] = round((C[j] / C[max(0, j - 96)] - 1) * 100, 1)
-    return C[-1]
+    n = 7 * 96                                                   # 7 hari terakhir untuk grafik
+    seri = {"t": [x + BAR for x in T[-n:]], "c": C[-n:], "ema": [float(f"{v:.6g}") for v in eL[-n:]]}
+    return C[-1], seri
 
 
 def values(state, last_px):
@@ -232,7 +234,7 @@ def manual_value(state, last_px):
     return m["cash"] + sum(p["qty"] * last_px[s] * (1 - FEE) for s, p in m["koin"].items())
 
 
-def write_dashboard(state, last_px, now_wib, catat_histori=True):
+def write_dashboard(state, last_px, now_wib, catat_histori=True, seri=None):
     modal, eq, dh_val, hold = values(state, last_px)
     man = manual_value(state, last_px)
     hist = state.setdefault("histori", [])
@@ -267,7 +269,14 @@ def write_dashboard(state, last_px, now_wib, catat_histori=True):
            "dh_beli": dh_beli[-50:], "manual": manual,
            "repo": "javanic-triyo/Kantong-bot"}
     os.makedirs(os.path.join(HERE, "docs"), exist_ok=True)
-    json.dump(out, open(os.path.join(HERE, "docs", "data.json"), "w"))
+    path = os.path.join(HERE, "docs", "data.json")
+    if seri is None and os.path.exists(path):                    # trade manual: pakai grafik terakhir
+        try:
+            seri = json.load(open(path)).get("seri")
+        except Exception:
+            seri = None
+    out["seri"] = seri or {}
+    json.dump(out, open(path, "w"), separators=(",", ":"))
 
 
 def summary(state, last_px, reason="Ringkasan harian"):
@@ -330,14 +339,14 @@ def main():
                f"{rp(CFG['dip_hold_porsi'])} per koin (maks 1x per {CFG['dip_hold_jeda_jam']} jam) "
                "lalu hold, tidak pernah dijual.\nHasilnya dibandingkan dengan bot utama di ringkasan harian.",
                "shopping_cart", 3)
-    last_px = {}
+    last_px = {}; seri = {}
     for s, c in data.items():
         if s not in state["koin"]:      # koin baru ditambahkan di config
             state["koin"][s] = {"cash": float(CFG["modal_per_koin"]), "posisi": None, "last_ts": c[-1]["Time"]}
             state["harga_awal"][s] = c[-1]["Close"]
         if s not in state["dip_hold"]:
             state["dip_hold"][s] = {"cash": float(CFG["modal_per_koin"]), "qty": 0.0, "beli": []}
-        last_px[s] = process_coin(s, c, btc_by_ts, state["koin"][s], state["dip_hold"][s], state)
+        last_px[s], seri[name(s)] = process_coin(s, c, btc_by_ts, state["koin"][s], state["dip_hold"][s], state)
     today = now_wib.strftime("%Y-%m-%d")
     if test:
         summary(state, last_px, "Tes notifikasi")
@@ -345,7 +354,7 @@ def main():
         summary(state, last_px)
         state["ringkasan_terakhir"] = today
     state["terakhir_cek"] = now_wib.strftime("%d/%m/%Y %H:%M WIB")
-    write_dashboard(state, last_px, now_wib)
+    write_dashboard(state, last_px, now_wib, seri=seri)
     save_state(state)
 
 
