@@ -67,6 +67,8 @@ def daily_range(c):
 
 # ---------------------------------------------------------------- format
 def rp(x):
+    if x < 0.0000005:
+        return "Rp0"
     if x < 1:
         return "Rp" + f"{x:.6f}".rstrip("0").replace(".", ",")
     if x < 100:
@@ -114,7 +116,7 @@ def equity(state, last_px):
 
 
 # ---------------------------------------------------------------- inti
-def process_coin(sym, c, btc_by_ts, k, state):
+def process_coin(sym, c, btc_by_ts, k, dh, state):
     C = [x["Close"] for x in c]; H = [x["High"] for x in c]
     L = [x["Low"] for x in c]; O = [x["Open"] for x in c]
     T = [x["Time"] for x in c]
@@ -156,13 +158,26 @@ def process_coin(sym, c, btc_by_ts, k, state):
                     notify(f"CUT LOSS - {name(sym)} (paper)",
                            f"Jual di {rp(px)} ({tstr} WIB)\nRugi {rp(-laba)} ({pct:+.1f}% setelah fee)\n"
                            f"Dibeli di {rp(p['harga'])}", "stop_sign", 4)
-        # ---- entry
-        if k["posisi"] or T[i] - k.get("last_sig_ts", 0) < 4 * BAR:
-            continue
+        # ---- sinyal dip + bounce
         hi24 = max(H[max(0, i - 96):i + 1])
         score = (any(r[j - 1] < 30 <= r[j] for j in range(max(1, i - 3), i + 1))
                  + (C[i] > e20[i]) + (min(L[i - 7:i + 1]) > min(L[i - 15:i - 7])) + (C[i] > O[i]))
         if not (C[i] <= hi24 * (1 - dip / 100) and score >= 3):
+            continue
+        # ---- kantong DIP & HOLD: beli porsi tetap saat dip, tidak pernah jual
+        porsi = CFG["dip_hold_porsi"]
+        if dh["cash"] >= porsi and T[i] - dh.get("last_buy_ts", 0) >= CFG["dip_hold_jeda_jam"] * 3600:
+            dh["cash"] -= porsi
+            dh["qty"] += porsi * (1 - FEE) / C[i]
+            dh["last_buy_ts"] = T[i]
+            dh["beli"].append({"harga": C[i], "waktu": tstr})
+            avg = (CFG["modal_per_koin"] - dh["cash"]) * (1 - FEE) / dh["qty"]
+            notify(f"DIP & HOLD: beli {name(sym)} (paper)",
+                   f"Beli {rp(porsi)} di {rp(C[i])} ({tstr} WIB)\n"
+                   f"Pembelian ke-{len(dh['beli'])}, sisa dana {rp(dh['cash'])}\n"
+                   f"Harga rata-rata sekarang {rp(avg)}. Tidak akan dijual (hold).", "shopping_cart", 3)
+        # ---- kantong UTAMA (lampu + 2R/1R)
+        if k["posisi"] or T[i] - k.get("last_sig_ts", 0) < 4 * BAR:
             continue
         coin_up = C[i] > eL[i] and eL[i] > eL[i - SLOPE]
         coin_down = C[i] < eL[i] and eL[i] < eL[i - SLOPE]
@@ -197,11 +212,19 @@ def summary(state, last_px, reason="Ringkasan harian"):
     eq = equity(state, last_px)
     modal = CFG["modal_per_koin"] * len(state["koin"])
     hold = sum(CFG["modal_per_koin"] * (1 - FEE) ** 2 * last_px[s] / state["harga_awal"][s] for s in state["koin"])
-    lines = [f"Saldo paper: {rp(eq)} ({(eq / modal - 1) * 100:+.1f}%)",
-             f"Kalau hold sejak mulai: {rp(hold)} ({(hold / modal - 1) * 100:+.1f}%)"]
+    dh = state.get("dip_hold", {})
+    dh_val = sum(d["cash"] + d["qty"] * last_px[s] * (1 - FEE) for s, d in dh.items())
+    dh_mulai = state.get("dip_hold_mulai", state["mulai"])
+    lines = ["PERBANDINGAN (modal " + rp(modal) + " masing-masing):",
+             f"- Bot lampu + 2R/1R: {rp(eq)} ({(eq / modal - 1) * 100:+.1f}%)",
+             f"- Dip & hold: {rp(dh_val)} ({(dh_val / modal - 1) * 100:+.1f}%), mulai {dh_mulai}",
+             f"- Hold dari awal: {rp(hold)} ({(hold / modal - 1) * 100:+.1f}%)", ""]
+    if dh:
+        beli = sum(len(d["beli"]) for d in dh.values())
+        lines.append(f"Dip & hold: sudah beli {beli}x, sisa dana {rp(sum(d['cash'] for d in dh.values()))}")
     open_pos = [(s, k["posisi"]) for s, k in state["koin"].items() if k["posisi"]]
     if open_pos:
-        lines.append("Posisi terbuka:")
+        lines.append("Posisi terbuka bot utama:")
         for s, p in open_pos:
             lines.append(f"- {name(s)} beli {rp(p['harga'])}, sekarang {rp(last_px[s])} "
                          f"({(last_px[s] / p['harga'] - 1) * 100:+.1f}%)")
@@ -236,12 +259,22 @@ def main():
                ", ".join(name(s) for s in data) + ".\nBot cek setiap 15 menit. Kamu akan dapat notifikasi "
                "saat ada sinyal beli, target tercapai, atau cut loss, plus ringkasan setiap jam "
                f"{CFG['jam_ringkasan_wib']}:00 WIB.\nIni simulasi, tidak ada uang asli.", "robot,tada", 4)
+    if "dip_hold" not in state:
+        state["dip_hold"] = {}
+        state["dip_hold_mulai"] = now_wib.strftime("%d/%m/%Y %H:%M WIB")
+        notify("Kantong baru: DIP & HOLD (paper)",
+               f"Modal pura-pura {rp(CFG['modal_per_koin'] * len(data))} terpisah. Setiap ada dip, bot beli "
+               f"{rp(CFG['dip_hold_porsi'])} per koin (maks 1x per {CFG['dip_hold_jeda_jam']} jam) "
+               "lalu hold, tidak pernah dijual.\nHasilnya dibandingkan dengan bot utama di ringkasan harian.",
+               "shopping_cart", 3)
     last_px = {}
     for s, c in data.items():
         if s not in state["koin"]:      # koin baru ditambahkan di config
             state["koin"][s] = {"cash": float(CFG["modal_per_koin"]), "posisi": None, "last_ts": c[-1]["Time"]}
             state["harga_awal"][s] = c[-1]["Close"]
-        last_px[s] = process_coin(s, c, btc_by_ts, state["koin"][s], state)
+        if s not in state["dip_hold"]:
+            state["dip_hold"][s] = {"cash": float(CFG["modal_per_koin"]), "qty": 0.0, "beli": []}
+        last_px[s] = process_coin(s, c, btc_by_ts, state["koin"][s], state["dip_hold"][s], state)
     today = now_wib.strftime("%Y-%m-%d")
     if test:
         summary(state, last_px, "Tes notifikasi")

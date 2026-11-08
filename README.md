@@ -15,6 +15,10 @@ Setiap 15 menit, GitHub Actions menjalankan `bot.py`:
 4. **Jual**: target **+2R**, cut loss **−1R**. R adalah rata-rata naik-turun harian koin, jadi target UAI jauh lebih lebar dari target SOL.
 5. Kirim notifikasi ke HP lewat **ntfy**, dan ringkasan setiap jam 21:00 WIB.
 
+### Kantong kedua: Dip & Hold
+
+Modal pura-pura terpisah (Rp200.000 per koin). Setiap ada sinyal dip, bot beli Rp50.000 (maksimal 1x per 24 jam per koin) lalu **hold, tidak pernah dijual**. Ringkasan harian membandingkan bot utama, dip & hold, dan hold dari awal.
+
 Modal pura-pura: Rp200.000 per koin (lihat `config.json`).
 
 ## File

@@ -7,5 +7,7 @@
   "sl_kali_R": 1.0,
   "dip_kali_R": 0.6,
   "dip_minimum_persen": 4.0,
-  "jam_ringkasan_wib": 21
+  "jam_ringkasan_wib": 21,
+  "dip_hold_porsi": 50000,
+  "dip_hold_jeda_jam": 24
 }
