@@ -4,7 +4,7 @@ Bot simulasi trading koin Indodax dengan **uang pura-pura**. Tidak memakai API k
 
 ## Cara kerja
 
-Setiap 15 menit, GitHub Actions menjalankan `bot.py`:
+GitHub Actions menjalankan `run_loop.sh`: satu run berjalan sekitar 6 jam dan cek setiap 15 menit, lalu memicu run berikutnya sendiri (jadwal cron hanya cadangan). Setiap cek:
 
 1. Mengambil harga candle 15 menit dari Indodax (data publik).
 2. Mengecek **lampu lalu lintas**:

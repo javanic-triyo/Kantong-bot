@@ -20,7 +20,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: kantong-bot
+  group: kantong-manual
   cancel-in-progress: false
 
 jobs:
@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -38,14 +40,17 @@ jobs:
           KOIN: ${{ github.event.inputs.koin }}
           AKSI: ${{ github.event.inputs.aksi }}
           JUMLAH: ${{ github.event.inputs.jumlah }}
-        run: python manual.py
-      - name: Simpan state
         run: |
           git config user.name "kantong-bot"
           git config user.email "kantong-bot@users.noreply.github.com"
-          git add state.json docs/data.json
-          if ! git diff --cached --quiet; then
-            git commit -m "trade manual: ${{ github.event.inputs.aksi }} ${{ github.event.inputs.koin }}"
-            git pull --rebase origin main || true
-            git push
-          fi
+          for attempt in 1 2 3 4; do
+            git pull -q --rebase origin main || true
+            python manual.py
+            git add state.json docs/data.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "trade manual: $AKSI $KOIN"
+            if git push -q origin HEAD:main; then exit 0; fi
+            echo "push ditolak, ulang dengan state terbaru..."
+            git reset -q --hard HEAD~1
+          done
+          exit 1

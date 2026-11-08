@@ -1,17 +1,24 @@
 name: Kantong Bot
 
+# Satu run berjalan ~5 jam 40 menit, cek setiap 15 menit, lalu memicu run berikutnya sendiri.
+# Jadwal cron di bawah hanya cadangan untuk menyalakan lagi kalau rantai run terputus.
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # setiap 15 menit (jadwal GitHub kadang telat beberapa menit)
   workflow_dispatch:
     inputs:
       test:
         description: "Kirim notifikasi tes?"
         type: boolean
         default: false
+      sekali:
+        description: "Cek sekali saja (tanpa jalan terus 6 jam)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "17,47 * * * *"
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: kantong-bot
@@ -20,29 +27,20 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Jalankan bot
+      - name: Jalankan bot (loop)
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           TEST_NOTIF: ${{ github.event.inputs.test == 'true' && '1' || '0' }}
-        run: python bot.py
-
-      - name: Simpan state
-        run: |
-          git config user.name "kantong-bot"
-          git config user.email "kantong-bot@users.noreply.github.com"
-          git add state.json docs/data.json
-          if git diff --cached --quiet; then
-            echo "Tidak ada perubahan"
-          else
-            git commit -m "update state $(TZ=Asia/Jakarta date '+%d/%m %H:%M')"
-            git pull --rebase origin main || true
-            git push
-          fi
+          ONCE: ${{ github.event.inputs.sekali == 'true' && '1' || '0' }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash run_loop.sh
