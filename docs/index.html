@@ -79,6 +79,7 @@
   #pchart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
   .mlegend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
   .mlegend span { display: inline-flex; align-items: center; gap: 5px; }
+  .stale { border: 1px solid var(--warning); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin: 0 0 14px; }
   footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
 </style>
 </head>
@@ -87,6 +88,7 @@
   <h1>Kantong Bot</h1>
   <p class="sub" id="sub">Paper trading (uang pura-pura) · memuat data…</p>
 
+  <p class="stale" id="stale" hidden></p>
   <div class="tiles" id="tiles"></div>
 
   <section class="card">
@@ -300,6 +302,13 @@ function drawChart(d) {
 }
 
 function render(d) {
+  const st = document.getElementById("stale");
+  const m = d.diperbarui.match(/(\d+)\/(\d+)\/(\d+) (\d+):(\d+)/);
+  if (m) {
+    const age = (Date.now() - Date.UTC(m[3], m[2] - 1, m[1], m[4] - 7, m[5])) / 60000;
+    st.hidden = age < 45;
+    st.textContent = "⚠️ Bot belum update selama " + Math.round(age) + " menit. Biasanya pulih sendiri; kalau lebih dari 2 jam, buka Actions → Kantong Bot → Run workflow.";
+  }
   SERIES = ALL_SERIES.filter(s => s.key !== "manual" || d.sekarang.manual != null);
   document.getElementById("sub").textContent =
     `Paper trading (uang pura-pura) · diperbarui ${d.diperbarui} · mulai ${d.mulai}`;

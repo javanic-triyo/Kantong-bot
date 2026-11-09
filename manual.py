@@ -12,9 +12,12 @@ MODAL_MANUAL = 1_000_000
 
 
 def harga_sekarang():
-    out = subprocess.run(["curl", "-s", "-m", "30", "https://indodax.com/api/summaries"],
-                         capture_output=True, text=True).stdout
-    t = json.loads(out)["tickers"]
+    try:
+        t = bot._get_json("https://indodax.com/api/summaries")["tickers"]
+    except bot.FetchError:
+        bot.notify("Trade manual gagal", "Indodax sedang tidak memberi data harga ke server GitHub. "
+                   "Coba lagi beberapa menit lagi (tombol Beli/Jual).", "warning", 3)
+        sys.exit(1)
     return {s: float(t[s[:-3].lower() + "_idr"]["last"]) for s in bot.CFG["coins"]}
 
 

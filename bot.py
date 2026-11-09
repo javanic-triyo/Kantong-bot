@@ -25,17 +25,36 @@ FEE = CFG["fee_per_sisi"]
 
 
 # ---------------------------------------------------------------- data
+class FetchError(Exception):
+    pass
+
+
+def _get_json(url):
+    """Ambil JSON dari Indodax, coba ulang 3x kalau balasan kosong / bukan JSON."""
+    last = ""
+    for wait in (0, 5, 20):
+        if wait:
+            time.sleep(wait)
+        out = subprocess.run(["curl", "-s", "-m", "30", url], capture_output=True, text=True).stdout
+        try:
+            return json.loads(out)
+        except ValueError:
+            last = out[:120].replace("\n", " ")
+    raise FetchError(f"Indodax tidak memberi data ({url.split('?')[0]}): '{last}'")
+
+
 def fetch(sym, days=FETCH_DAYS):
     now = int(time.time()); rows = {}
     t = now - 86400 * days
     while t < now:
         e = min(t + 86400 * 7, now)
         url = f"https://indodax.com/tradingview/history_v2?symbol={sym}&tf=15&from={t}&to={e}"
-        out = subprocess.run(["curl", "-s", "-m", "30", url], capture_output=True, text=True).stdout
-        for c in json.loads(out):
+        for c in _get_json(url):
             rows[c["Time"]] = c
         t = e
     closed = [rows[k] for k in sorted(rows) if k + BAR <= now]   # hanya candle yang sudah selesai
+    if len(closed) < 400:
+        raise FetchError(f"data {sym} terlalu sedikit ({len(closed)} candle)")
     return closed
 
 
@@ -398,4 +417,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except FetchError as ex:
+        print("GAGAL AMBIL DATA:", ex)
+        sys.exit(3)

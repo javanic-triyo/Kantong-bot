@@ -43,4 +43,4 @@ jobs:
           TEST_NOTIF: ${{ github.event.inputs.test == 'true' && '1' || '0' }}
           ONCE: ${{ github.event.inputs.sekali == 'true' && '1' || '0' }}
           GH_TOKEN: ${{ github.token }}
-        run: bash run_loop.sh
+        run: cp run_loop.sh /tmp/run_loop.sh && bash /tmp/run_loop.sh   # salinan, supaya aman saat git pull mengubah file

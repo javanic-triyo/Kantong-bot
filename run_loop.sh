@@ -22,10 +22,21 @@ commit_push() {
 }
 
 first=1
+gagal=0
 while true; do
   git pull -q --rebase origin main || true
-  if [ $first -eq 1 ]; then python bot.py || echo "bot error"; else TEST_NOTIF=0 python bot.py || echo "bot error"; fi
+  if [ $first -eq 1 ]; then python bot.py; rc=$?; else TEST_NOTIF=0 python bot.py; rc=$?; fi
   first=0
+  if [ $rc -ne 0 ]; then
+    gagal=$((gagal + 1))
+    echo "bot gagal (kode $rc), gagal berturut-turut: $gagal"
+    if [ $gagal -ge 2 ]; then
+      echo "Pindah ke server GitHub baru (run baru biasanya dapat IP lain)."
+      break
+    fi
+  else
+    gagal=0
+  fi
   commit_push
   [ "${ONCE:-0}" = "1" ] && break
   now=$(date +%s)
