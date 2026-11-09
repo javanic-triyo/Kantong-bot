@@ -27,7 +27,7 @@
    "lampu_now": "merah",
    "chg24": -44.1,
    "last_warn_ts": 1794195000,
-   "last_bounce_ts": 1794187800
+   "last_bounce_ts": 0
   },
   "HYPEIDR": {
    "cash": 200000.0,

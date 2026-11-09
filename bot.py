@@ -192,6 +192,16 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
         segar = T[i] + BAR >= time.time() - 3600           # alert hanya untuk kejadian 1 jam terakhir
         sinyal = turun >= dip and score >= 3
 
+        # ---- BOUNCE GAGAL: harga tembus di bawah titik terendah saat alert bounce terakhir
+        if k.get("bounce_low") and L[i] < k["bounce_low"]:
+            if segar:
+                notify(f"BOUNCE GAGAL - {name(sym)}",
+                       f"Harga {rp(C[i])} ({tstr} WIB) tembus di bawah {rp(k['bounce_low'])}, titik terendah saat "
+                       f"alert bounce terakhir.\nMantulnya gagal (false signal). Kalau kamu ikut beli, pertimbangkan "
+                       f"cut loss. Bot akan kirim alert bounce baru kalau ada tanda mantul lagi.", "x", 4)
+            k["bounce_low"] = None
+            k["last_bounce_ts"] = 0                        # boleh kirim alert bounce baru tanpa menunggu jeda
+
         # ---- ALERT tahap 1: turun tajam, belum mantul
         warn_pct = max(1.5 * dip, 6.0)
         low_baru = L[i] <= min(L[max(0, i - 96):i])         # titik terendah baru dalam 24 jam
@@ -253,9 +263,11 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
         # ---- ALERT tahap 2: bounce terdeteksi (bot utama tidak beli)
         if segar and T[i] - k.get("last_bounce_ts", 0) >= CFG.get("bounce_jeda_jam", 4) * 3600:
             k["last_bounce_ts"] = T[i]
+            k["bounce_low"] = min(L[max(0, i - 15):i + 1])          # dasar mantul ini (4 jam terakhir)
             notify(f"BOUNCE TERDETEKSI - {name(sym)}",
                    f"Harga {rp(C[i])} ({tstr} WIB), turun {turun:.1f}% dari high 24 jam lalu mulai mantul "
                    f"(skor bounce {score}/4).\nLampu {lampu_txt}: {alasan}.\n"
+                   f"Batas gagal: kalau harga turun di bawah {rp(min(L[max(0, i - 15):i + 1]))}, mantulnya gagal.\n"
                    + (dh_txt + "\n" if dh_txt else "")
                    + "Mau ikut? Pakai tombol Beli di dashboard (kantong manual).",
                    "white_check_mark", 4 if not merah else 3)
