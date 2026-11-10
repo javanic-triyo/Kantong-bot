@@ -11,10 +11,10 @@
   "XRPIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794338100,
+   "last_ts": 1794339000,
    "R": 5.07,
    "lampu_now": "merah",
-   "chg24": -1.9,
+   "chg24": -2.5,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 3,
    "last_red_ts": 1794333600,
@@ -25,12 +25,12 @@
   "UAIIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794338100,
+   "last_ts": 1794339000,
    "R": 25.0,
    "dilewati_merah": 4,
    "last_red_ts": 1794274200,
    "lampu_now": "merah",
-   "chg24": -1.8,
+   "chg24": -3.8,
    "last_warn_ts": 1794195000,
    "last_bounce_ts": 0,
    "bounce_low": null,
@@ -39,33 +39,33 @@
   "HYPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794338100,
+   "last_ts": 1794339000,
    "R": 6.12,
    "lampu_now": "merah",
-   "chg24": -3.7,
+   "chg24": -4.7,
    "last_warn_ts": 1794324600,
-   "dilewati_merah": 1,
-   "last_red_ts": 1794233700,
-   "last_bounce_ts": 0,
-   "bounce_low": null,
+   "dilewati_merah": 2,
+   "last_red_ts": 1794339000,
+   "last_bounce_ts": 1794339000,
+   "bounce_low": 1273339,
    "R_asli": 6.12
   },
   "PEPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794338100,
+   "last_ts": 1794339000,
    "R": 9.96,
    "lampu_now": "merah",
-   "chg24": 3.0,
+   "chg24": 2.8,
    "R_asli": 9.96
   },
   "SOLIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794338100,
+   "last_ts": 1794339000,
    "R": 3.88,
    "lampu_now": "merah",
-   "chg24": -4.1,
+   "chg24": -4.9,
    "R_asli": 3.88,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 1,
@@ -76,7 +76,7 @@
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-10",
- "terakhir_cek": "11/11/2026 02:31 WIB",
+ "terakhir_cek": "11/11/2026 02:46 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 100000.0,
@@ -109,15 +109,19 @@
    "last_buy_ts": 1794226500
   },
   "HYPEIDR": {
-   "cash": 150000.0,
-   "qty": 0.037262670055314695,
+   "cash": 100000.0,
+   "qty": 0.075600389603168,
    "beli": [
     {
      "harga": 1337800,
      "waktu": "09/11 16:00"
+    },
+    {
+     "harga": 1300286,
+     "waktu": "11/11 02:45"
     }
    ],
-   "last_buy_ts": 1794213900
+   "last_buy_ts": 1794339000
   },
   "PEPEIDR": {
    "cash": 200000.0,
@@ -512,6 +516,13 @@
    "dh": 965611,
    "hold": 871934,
    "manual": 954246
+  },
+  {
+   "t": 1794339976,
+   "bot": 1000000,
+   "dh": 963047,
+   "hold": 865075,
+   "manual": 953128
   }
  ],
  "manual": {
