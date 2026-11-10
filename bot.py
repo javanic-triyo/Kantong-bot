@@ -145,7 +145,9 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
     for i in range(len(B)):
         if B[i] is None: B[i] = B[i - 1] if i else first
     e20 = ema(C, 20); r = rsi(C); eL = ema(C, LONG); bL = ema(B, LONG)
-    R = daily_range(c); k["R"] = round(R, 2)
+    R_asli = daily_range(c)
+    R = min(R_asli, CFG.get("R_maks", 25.0))                  # batasi: setelah crash, R bisa melonjak tak wajar
+    k["R"] = round(R, 2); k["R_asli"] = round(R_asli, 2)
     dip = max(CFG["dip_minimum_persen"], CFG["dip_kali_R"] * R)
     tp, sl = CFG["tp_kali_R"] * R / 100, CFG["sl_kali_R"] * R / 100
 
