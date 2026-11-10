@@ -11,10 +11,10 @@
   "XRPIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794334500,
+   "last_ts": 1794335400,
    "R": 5.07,
    "lampu_now": "merah",
-   "chg24": -2.0,
+   "chg24": -2.1,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 3,
    "last_red_ts": 1794333600,
@@ -25,12 +25,12 @@
   "UAIIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794334500,
+   "last_ts": 1794335400,
    "R": 25.0,
    "dilewati_merah": 4,
    "last_red_ts": 1794274200,
    "lampu_now": "merah",
-   "chg24": -5.1,
+   "chg24": -5.3,
    "last_warn_ts": 1794195000,
    "last_bounce_ts": 0,
    "bounce_low": null,
@@ -39,10 +39,10 @@
   "HYPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794334500,
+   "last_ts": 1794335400,
    "R": 6.12,
    "lampu_now": "merah",
-   "chg24": -4.4,
+   "chg24": -4.2,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 1,
    "last_red_ts": 1794233700,
@@ -53,26 +53,30 @@
   "PEPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794334500,
+   "last_ts": 1794335400,
    "R": 9.96,
    "lampu_now": "merah",
-   "chg24": 2.3,
+   "chg24": 3.7,
    "R_asli": 9.96
   },
   "SOLIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794334500,
+   "last_ts": 1794335400,
    "R": 3.88,
    "lampu_now": "merah",
-   "chg24": -3.9,
+   "chg24": -3.7,
    "R_asli": 3.88,
-   "last_warn_ts": 1794324600
+   "last_warn_ts": 1794324600,
+   "dilewati_merah": 1,
+   "last_red_ts": 1794335400,
+   "last_bounce_ts": 1794335400,
+   "bounce_low": 1474000
   }
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-10",
- "terakhir_cek": "11/11/2026 01:31 WIB",
+ "terakhir_cek": "11/11/2026 01:46 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 100000.0,
@@ -121,9 +125,15 @@
    "beli": []
   },
   "SOLIDR": {
-   "cash": 200000.0,
-   "qty": 0.0,
-   "beli": []
+   "cash": 150000.0,
+   "qty": 0.03312103095769943,
+   "beli": [
+    {
+     "harga": 1505086,
+     "waktu": "11/11 01:45"
+    }
+   ],
+   "last_buy_ts": 1794335400
   }
  },
  "dip_hold_mulai": "08/11/2026 19:41 WIB",
@@ -495,6 +505,13 @@
    "dh": 963927,
    "hold": 862042,
    "manual": 954767
+  },
+  {
+   "t": 1794336377,
+   "bot": 1000000,
+   "dh": 965611,
+   "hold": 871934,
+   "manual": 954246
   }
  ],
  "manual": {
