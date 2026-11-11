@@ -11,10 +11,10 @@
   "XRPIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794406500,
+   "last_ts": 1794407400,
    "R": 5.07,
    "lampu_now": "merah",
-   "chg24": -0.0,
+   "chg24": -0.2,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 3,
    "last_red_ts": 1794333600,
@@ -25,12 +25,12 @@
   "UAIIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794406500,
+   "last_ts": 1794407400,
    "R": 25.0,
    "dilewati_merah": 4,
    "last_red_ts": 1794274200,
    "lampu_now": "merah",
-   "chg24": -6.2,
+   "chg24": -7.1,
    "last_warn_ts": 1794195000,
    "last_bounce_ts": 0,
    "bounce_low": null,
@@ -39,10 +39,10 @@
   "HYPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794406500,
+   "last_ts": 1794407400,
    "R": 6.12,
    "lampu_now": "merah",
-   "chg24": 0.4,
+   "chg24": 0.1,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 2,
    "last_red_ts": 1794345300,
@@ -53,20 +53,20 @@
   "PEPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794406500,
+   "last_ts": 1794407400,
    "R": 9.96,
    "lampu_now": "merah",
-   "chg24": -6.2,
+   "chg24": -8.1,
    "R_asli": 9.96,
    "last_warn_ts": 1794386700
   },
   "SOLIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794406500,
+   "last_ts": 1794407400,
    "R": 4.1,
    "lampu_now": "merah",
-   "chg24": 0.8,
+   "chg24": 0.1,
    "R_asli": 4.1,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 1,
@@ -77,7 +77,7 @@
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-11",
- "terakhir_cek": "11/11/2026 21:31 WIB",
+ "terakhir_cek": "11/11/2026 21:46 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 100000.0,
@@ -650,6 +650,13 @@
    "dh": 962252,
    "hold": 855865,
    "manual": 943304
+  },
+  {
+   "t": 1794408377,
+   "bot": 1000000,
+   "dh": 962133,
+   "hold": 855795,
+   "manual": 941421
   }
  ],
  "manual": {
