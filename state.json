@@ -11,7 +11,7 @@
   "XRPIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794448800,
+   "last_ts": 1794449700,
    "R": 5.44,
    "lampu_now": "merah",
    "chg24": 0.7,
@@ -25,12 +25,12 @@
   "UAIIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794448800,
+   "last_ts": 1794449700,
    "R": 25.0,
    "dilewati_merah": 4,
    "last_red_ts": 1794274200,
    "lampu_now": "merah",
-   "chg24": -7.1,
+   "chg24": -7.7,
    "last_warn_ts": 1794195000,
    "last_bounce_ts": 0,
    "bounce_low": null,
@@ -39,7 +39,7 @@
   "HYPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794448800,
+   "last_ts": 1794449700,
    "R": 6.01,
    "lampu_now": "merah",
    "chg24": 1.2,
@@ -53,20 +53,24 @@
   "PEPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794448800,
+   "last_ts": 1794449700,
    "R": 9.74,
    "lampu_now": "merah",
-   "chg24": -15.8,
+   "chg24": -14.9,
    "R_asli": 9.74,
-   "last_warn_ts": 1794431700
+   "last_warn_ts": 1794431700,
+   "dilewati_merah": 1,
+   "last_red_ts": 1794449700,
+   "last_bounce_ts": 1794449700,
+   "bounce_low": 0.082028
   },
   "SOLIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1794448800,
+   "last_ts": 1794449700,
    "R": 4.26,
    "lampu_now": "merah",
-   "chg24": 0.8,
+   "chg24": 1.0,
    "R_asli": 4.26,
    "last_warn_ts": 1794324600,
    "dilewati_merah": 1,
@@ -77,7 +81,7 @@
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-11",
- "terakhir_cek": "12/11/2026 09:16 WIB",
+ "terakhir_cek": "12/11/2026 09:31 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 100000.0,
@@ -125,9 +129,15 @@
    "last_buy_ts": 1794339000
   },
   "PEPEIDR": {
-   "cash": 200000.0,
-   "qty": 0.0,
-   "beli": []
+   "cash": 150000.0,
+   "qty": 598726.8796540956,
+   "beli": [
+    {
+     "harga": 0.08326,
+     "waktu": "12/11 09:30"
+    }
+   ],
+   "last_buy_ts": 1794449700
   },
   "SOLIDR": {
    "cash": 150000.0,
@@ -727,6 +737,13 @@
    "dh": 959389,
    "hold": 831963,
    "manual": 941840
+  },
+  {
+   "t": 1794450677,
+   "bot": 1000000,
+   "dh": 960338,
+   "hold": 836532,
+   "manual": 941212
   }
  ],
  "manual": {
