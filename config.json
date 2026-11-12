@@ -1,5 +1,5 @@
 {
-  "coins": ["XRPIDR", "UAIIDR", "HYPEIDR", "PEPEIDR", "SOLIDR"],
+  "coins": ["XRPIDR", "UAIIDR", "HYPEIDR", "PEPEIDR", "SOLIDR", "ANOAIDR", "PIEVERSEIDR"],
   "btc_symbol": "BTCIDR",
   "modal_per_koin": 200000,
   "fee_per_sisi": 0.003,

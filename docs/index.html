@@ -102,7 +102,7 @@
   </section>
 
   <section class="card">
-    <h2>Saldo dari waktu ke waktu</h2>
+    <h2>Untung/rugi dari waktu ke waktu</h2>
     <div class="legend" id="legend"></div>
     <div id="chart"></div>
     <div class="note" id="chartnote"></div>
@@ -216,9 +216,12 @@ function drawChart(d) {
   const W = Math.max(320, box.clientWidth), Ht = W < 500 ? 230 : 280;
   const m = { l: 62, r: 78, t: 12, b: 26 };
   const iw = W - m.l - m.r, ih = Ht - m.t - m.b;
-  const vals = H.flatMap(p => SERIES.map(s => p[s.key])).filter(v => v != null).concat([d.modal]);
+  // grafik dalam % dari modal, supaya tetap benar walau modal bertambah (koin baru)
+  const base = (p, k) => k === "manual" ? 1000000 : (p.modal || 1000000);
+  const pv = (p, k) => p[k] == null ? null : (p[k] / base(p, k) - 1) * 100;
+  const vals = H.flatMap(p => SERIES.map(s => pv(p, s.key))).filter(v => v != null).concat([0]);
   let lo = Math.min(...vals), hi = Math.max(...vals);
-  const pad = Math.max((hi - lo) * 0.12, d.modal * 0.01); lo -= pad; hi += pad;
+  const pad = Math.max((hi - lo) * 0.12, 1); lo -= pad; hi += pad;
   const t0 = H[0].t, t1 = H.length > 1 ? H[H.length - 1].t : H[0].t + 3600;
   const x = t => m.l + (H.length > 1 ? (t - t0) / (t1 - t0) * iw : iw / 2);
   const y = v => m.t + (hi - v) / (hi - lo) * ih;
@@ -234,10 +237,10 @@ function drawChart(d) {
     const v = lo + (hi - lo) * i / ticks, yy = y(v);
     add("line", { x1: m.l, x2: m.l + iw, y1: yy, y2: yy, stroke: "var(--grid)", "stroke-width": 1 });
     const tx = add("text", { x: m.l - 8, y: yy + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" });
-    tx.textContent = (v / 1000).toFixed(0) + "rb";
+    tx.textContent = pct(v, Math.abs(hi - lo) < 8 ? 1 : 0);
   }
   // modal reference line
-  add("line", { x1: m.l, x2: m.l + iw, y1: y(d.modal), y2: y(d.modal), stroke: "var(--axis)", "stroke-width": 1.5, "stroke-dasharray": "4 4" });
+  add("line", { x1: m.l, x2: m.l + iw, y1: y(0), y2: y(0), stroke: "var(--axis)", "stroke-width": 1.5, "stroke-dasharray": "4 4" });
   // x labels
   const nx = Math.min(W < 500 ? 3 : 4, H.length);
   const longSpan = t1 - t0 > 36 * 3600;
@@ -253,15 +256,15 @@ function drawChart(d) {
   // lines + end labels
   const ends = [];
   SERIES.forEach(s => {
-    const pts = H.filter(p => p[s.key] != null);
+    const pts = H.filter(p => pv(p, s.key) != null);
     if (!pts.length) return;
     if (pts.length > 1) {
-      add("path", { d: pts.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p[s.key]).toFixed(1)).join(" "),
+      add("path", { d: pts.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(pv(p, s.key)).toFixed(1)).join(" "),
         fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" });
     }
     const last = pts[pts.length - 1];
-    add("circle", { cx: x(last.t), cy: y(last[s.key]), r: 4, fill: s.color, stroke: "var(--surface-1)", "stroke-width": 2 });
-    ends.push({ s, y: y(last[s.key]) });
+    add("circle", { cx: x(last.t), cy: y(pv(last, s.key)), r: 4, fill: s.color, stroke: "var(--surface-1)", "stroke-width": 2 });
+    ends.push({ s, y: y(pv(last, s.key)) });
   });
   ends.sort((a, b) => a.y - b.y);
   for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 14) ends[i].y = ends[i - 1].y + 14;
@@ -280,14 +283,14 @@ function drawChart(d) {
     const p = H[best], px = x(p.t);
     cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
     SERIES.forEach((s, i) => { if (p[s.key] == null) { dots[i].setAttribute("visibility", "hidden"); return; }
-      dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", y(p[s.key])); dots[i].setAttribute("visibility", "visible"); });
+      dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", y(pv(p, s.key))); dots[i].setAttribute("visibility", "visible"); });
     tip.textContent = "";
     tip.append(el("div", { class: "t" }, fmtTime(p.t) + " WIB"));
     SERIES.forEach(s => {
       if (p[s.key] == null) return;
       const row = el("div", { class: "row" });
       const k = el("span", { class: "key" }); k.style.background = s.color;
-      row.append(k, el("b", {}, rp(p[s.key])), el("span", { class: "n" }, s.short));
+      row.append(k, el("b", {}, pct(pv(p, s.key))), el("span", { class: "n" }, rp(p[s.key]) + " · " + s.short));
       tip.append(row);
     });
     tip.style.display = "block";
@@ -321,7 +324,7 @@ function render(d) {
     const l = el("div", { class: "lbl" }); const k = el("span", { class: "key" }); k.style.background = s.color;
     l.append(k, document.createTextNode(s.label));
     t.append(l, el("div", { class: "val" }, rp(v)));
-    const pc = el("div", { class: "pct" }); pc.append(colored(pct(p), p), document.createTextNode(" dari modal " + rp(d.modal)));
+    const pc = el("div", { class: "pct" }); pc.append(colored(pct(p), p), document.createTextNode(" dari modal " + rp(base)));
     t.append(pc); tiles.append(t);
   });
   // legend
@@ -332,7 +335,7 @@ function render(d) {
   priceControls(d);
   document.getElementById("chartnote").textContent = d.histori.length < 3
     ? "Grafik baru mulai: bot mencatat saldo setiap jam, jadi garisnya akan terisi pelan-pelan."
-    : `${d.histori.length} titik data, dicatat setiap jam. Garis putus-putus = modal awal.`;
+    : `${d.histori.length} titik data, dicatat setiap jam. Dalam % dari modal; garis putus-putus = 0% (impas).`;
   table("histtable", ["Waktu (WIB)", "Bot utama", "Dip & hold", "Hold"].concat(SERIES.length > 3 ? ["Kamu"] : []),
     d.histori.slice().reverse().map(p => [fmtTime(p.t), rp(p.bot), rp(p.dh), rp(p.hold)]
       .concat(SERIES.length > 3 ? [p.manual == null ? "-" : rp(p.manual)] : [])), [1, 2, 3, 4]);

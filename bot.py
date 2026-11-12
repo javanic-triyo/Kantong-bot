@@ -81,6 +81,10 @@ def daily_range(c):
     for x in c:
         days.setdefault(datetime.fromtimestamp(x["Time"], WIB).date(), []).append(x)
     full = [v for v in days.values() if len(v) >= 80]   # hari yang datanya lengkap
+    if len(full) < 3:                                    # koin sepi: banyak 15 menit tanpa transaksi
+        full = [v for v in days.values() if len(v) >= 20]
+    if not full:
+        return 10.0
     return statistics.median((max(k["High"] for k in v) / min(k["Low"] for k in v) - 1) * 100 for v in full)
 
 
@@ -312,7 +316,7 @@ def write_dashboard(state, last_px, now_wib, catat_histori=True, seri=None):
     hist = state.setdefault("histori", [])
     now = int(time.time())
     if catat_histori and (not hist or now - hist[-1]["t"] >= 3600 - 120):   # catat 1x per jam
-        row = {"t": now, "bot": round(eq), "dh": round(dh_val), "hold": round(hold)}
+        row = {"t": now, "bot": round(eq), "dh": round(dh_val), "hold": round(hold), "modal": modal}
         if man is not None:
             row["manual"] = round(man)
         hist.append(row)

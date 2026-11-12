@@ -6,7 +6,7 @@ on:
       koin:
         description: "Koin"
         type: choice
-        options: [UAI, XRP, HYPE, PEPE, SOL]
+        options: [UAI, XRP, HYPE, PEPE, SOL, ANOA, PIEVERSE]
       aksi:
         description: "Beli atau jual?"
         type: choice
