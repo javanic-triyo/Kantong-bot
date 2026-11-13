@@ -1,0 +1,46 @@
+name: Kantong FX
+
+# Paper trading forex. Satu run ~5 jam 40 menit, cek setiap 15 menit, lalu memicu run berikutnya sendiri.
+# Jadwal cron di bawah hanya cadangan kalau rantai run terputus.
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Kirim notifikasi tes?"
+        type: boolean
+        default: false
+      sekali:
+        description: "Cek sekali saja (tanpa jalan terus 6 jam)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "7,37 * * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: kantong-fx
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Jalankan bot FX (loop)
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TEST_NOTIF: ${{ github.event.inputs.test == 'true' && '1' || '0' }}
+          ONCE: ${{ github.event.inputs.sekali == 'true' && '1' || '0' }}
+          GH_TOKEN: ${{ github.token }}
+        run: cp fx/fx_loop.sh /tmp/fx_loop.sh && bash /tmp/fx_loop.sh

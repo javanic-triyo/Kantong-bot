@@ -47,3 +47,18 @@ Data dashboard (`docs/data.json`) diperbarui setiap bot jalan, dan saldo dicatat
 ## Trading manual (kantong ke-4)
 
 Modal pura-pura Rp1.000.000 untuk keputusanmu sendiri. Tombol **Beli / Jual** di dashboard membuka workflow **Trade Manual**: pilih koin, beli/jual, dan jumlah Rupiah (atau "semua"), lalu Run workflow. Harga eksekusi adalah harga terakhir Indodax saat itu, ditambah fee 0,3%.
+
+## Kantong FX (forex, paper trading)
+
+Bot terpisah untuk forex dengan **uang pura-pura** (USD). Folder `fx/`, workflow **Kantong FX**. Datanya dari Yahoo Finance (publik), tanpa akun broker.
+
+Dua kantong dibandingkan, masing-masing modal pura-pura $1.000:
+
+1. **Trend 2 arah**: lampu hijau (tren naik) → hanya BUY saat harga koreksi lalu mantul. Lampu merah (tren turun) → hanya SELL saat harga naik sebentar lalu gagal. Kuning → tidak trading. Target +1R, cut loss −0,5R.
+2. **Breakout London**: catat high/low sesi Asia (07:00–14:00 WIB). Antara 14:00–19:00 WIB, tembus ke atas → BUY, tembus ke bawah → SELL. Cut loss di tengah range Asia, target 2× risiko, semua posisi ditutup 22:00 WIB.
+
+Risiko maks 1% modal per trade. Lot dihitung dari jarak cut loss dan dibulatkan ke bawah ke 0,01 lot, jadi risiko nyata kadang di bawah 1%. Spread per pair ada di `fx/config.json`. Ringkasan dikirim lewat ntfy (topik yang sama) setiap 22:00 WIB, Senin–Jumat.
+
+Dashboard: https://javanic-triyo.github.io/Kantong-bot/fx.html
+
+Strategi FX ini **belum di-backtest**. Paper trading inilah tesnya. Ini bukan saran keuangan.

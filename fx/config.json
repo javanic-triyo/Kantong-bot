@@ -1,0 +1,22 @@
+{
+  "pairs": ["EURUSD", "GBPUSD", "USDJPY", "USDIDR"],
+  "hanya_trend": ["USDIDR"],
+  "spread_pip": {"EURUSD": 1.2, "GBPUSD": 1.8, "USDJPY": 1.4, "AUDUSD": 1.4, "USDCHF": 1.6, "USDCAD": 1.8, "NZDUSD": 1.8, "USDIDR": 30},
+  "modal_usd": 1000,
+  "risiko_persen": 1.0,
+  "leverage_maks": 100,
+
+  "trend_tp_kali_R": 1.0,
+  "trend_sl_kali_R": 0.5,
+  "trend_koreksi_kali_R": 0.4,
+
+  "asia_mulai_wib": 7,
+  "asia_selesai_wib": 14,
+  "breakout_sampai_wib": 19,
+  "tutup_semua_wib": 22,
+  "breakout_tp_kali_risiko": 2.0,
+  "range_min_kali_R": 0.25,
+  "range_maks_kali_R": 1.2,
+
+  "jam_ringkasan_wib": 22
+}
