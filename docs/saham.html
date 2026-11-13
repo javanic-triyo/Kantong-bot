@@ -98,16 +98,16 @@
       <summary>Cara ubah portofolio</summary>
       <ol class="steps">
         <li>Tombol membuka halaman GitHub. Tap <b>Run workflow</b>.</li>
-        <li>Isi kode saham, jumlah lot <b>total</b> sekarang, dan harga beli rata-rata (lihat di aplikasi sekuritas kamu).</li>
+        <li>Isi kode saham, jumlah lot <b>total</b> sekarang, dan harga beli rata-rata (lihat di aplikasi sekuritas kamu). Data ini disimpan terenkripsi.</li>
         <li>Lot 0 = hapus saham dari daftar. Saham baru wajib isi harga beli.</li>
       </ol>
     </details>
   </section>
 
   <section class="card">
-    <h2>Nilai portofolio 3 bulan</h2>
+    <h2>Untung/rugi 3 bulan</h2>
     <div id="chart"></div>
-    <p class="note">Dihitung dengan jumlah lot sekarang × harga penutupan tiap hari.</p>
+    <p class="note">Dihitung dengan jumlah lot sekarang × harga penutupan tiap hari, dibanding modal.</p>
   </section>
 
   <section class="card">
@@ -119,7 +119,7 @@
     </ul>
   </section>
 
-  <footer>Harga dari Yahoo Finance, tertunda ±15 menit. Untung/rugi belum dipotong fee jual. Bukan saran investasi.</footer>
+  <footer>Harga dari Yahoo Finance, tertunda ±15 menit. Halaman ini publik, jadi hanya menampilkan persentase; angka Rupiah dikirim ke ntfy. Untung/rugi belum dipotong fee jual. Bukan saran investasi.</footer>
 </main>
 <script>
 const rp = x => x == null ? "-" : (x < 0 ? "-" : "") + "Rp" + Math.round(Math.abs(x)).toLocaleString("id-ID");
@@ -170,17 +170,16 @@ function render(d) {
   DATA = d; const T = d.total;
   document.getElementById("sub").textContent = `Portofolio saham BEI · diperbarui ${d.diperbarui}`;
   const tiles = document.getElementById("tiles"); tiles.textContent = "";
-  tiles.append(tile("Nilai portofolio", rp(T.nilai), "modal " + rp(T.modal)),
-    tile("Untung/rugi", rp(T.laba), T.modal ? pct(T.laba / T.modal * 100) : "", T.laba),
-    tile("Hari ini", rp(T.hari_ini), T.nilai ? pct(T.hari_ini / (T.nilai - T.hari_ini) * 100, 2) : "", T.hari_ini));
+  tiles.append(tile("Untung/rugi", pct(T.laba_pct), "dari modal", T.laba_pct),
+    tile("Hari ini", pct(T.hari_ini_pct, 2), "nilai portofolio", T.hari_ini_pct));
   if (d.ihsg) tiles.append(tile("IHSG", Math.round(d.ihsg.harga).toLocaleString("id-ID"), pct(d.ihsg.chg, 2) + " hari ini", d.ihsg.chg));
-  table("porto", ["Kode", "Lot", "Harga", "Hari ini", "Beli", "Untung"], d.rows.map(r => [r.kode, r.lot,
-    rp(r.harga), colored(pct(r.chg), r.chg), rp(r.beli), colored(pct(r.laba_pct), r.laba)]), [1, 2, 3, 4, 5]);
+  table("porto", ["Kode", "Harga", "Hari ini", "Untung", "Porsi"], d.rows.map(r => [r.kode,
+    rp(r.harga), colored(pct(r.chg), r.chg), colored(pct(r.laba_pct), r.laba_pct), pct(r.bobot).replace("+", "")]), [1, 2, 3, 4]);
   document.getElementById("btnubah").href = `https://github.com/${d.repo}/actions/workflows/saham-ubah.yml`;
   const s = d.seri; if (s.length > 1) {
     const xs = s.map(p => Date.parse(p[0]) / 1000);
     lineChart(document.getElementById("chart"), xs, [{ v: s.map(p => p[1]), color: "var(--series-1)" }],
-      { fy: v => "Rp" + Math.round(v / 1000) + "rb", zero: T.modal, extra: [T.modal], ml: 64 });
+      { fy: v => pct(v, 0), zero: 0, extra: [0], ml: 52 });
   }
 }
 fetch("saham_data.json?" + Date.now()).then(r => r.json()).then(render)

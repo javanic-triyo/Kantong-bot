@@ -3,7 +3,9 @@
 - Harga dari Yahoo Finance (kode .JK, tertunda ~10-15 menit).
 - Notifikasi ntfy kalau saham kamu naik/turun >= alert_persen dari penutupan kemarin (sekali per hari per saham).
 - Ringkasan setelah pasar tutup (Senin-Jumat).
-- Portofolio ada di config.json. Ubah lewat workflow "Saham - Ubah Portofolio" (lot 0 = hapus).
+- Portofolio (lot & harga beli) disimpan TERENKRIPSI di portofolio.enc dengan kunci dari secret SAHAM_KEY,
+  karena repo ini publik. Ubah lewat workflow "Saham - Ubah Portofolio" (lot 0 = hapus).
+- Dashboard publik hanya berisi kode saham dan persentase. Angka Rupiah hanya dikirim ke ntfy.
 Tidak ada transaksi; ini hanya pemantauan.
 """
 import json, os, subprocess, sys, time, urllib.request
@@ -14,6 +16,8 @@ ROOT = os.path.dirname(HERE)
 CFG_FILE = os.path.join(HERE, "config.json")
 STATE_FILE = os.path.join(HERE, "state.json")
 DATA_FILE = os.path.join(ROOT, "docs", "saham_data.json")
+ENC_FILE = os.path.join(HERE, "portofolio.enc")
+DI_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
 WIB = timezone(timedelta(hours=7))
 
 
@@ -23,7 +27,7 @@ def rp(x):
 
 def notify(title, message, tags="", priority=3):
     topic = os.environ.get("NTFY_TOPIC", "").strip()
-    print(f"\n[{title}]\n{message}\n")
+    print(f"\n[{title}]" + ("" if DI_GITHUB else f"\n{message}\n"))   # log GitHub publik: jangan tulis angka
     if not topic:
         return
     body = json.dumps({"topic": topic, "title": title, "message": message,
@@ -33,6 +37,35 @@ def notify(title, message, tags="", priority=3):
         urllib.request.urlopen(req, timeout=20).read()
     except Exception as ex:
         print("gagal kirim notifikasi:", ex)
+
+
+def _openssl(args, data):
+    r = subprocess.run(["openssl", "enc", "-aes-256-cbc", "-pbkdf2", "-salt", "-a", "-A", *args, "-pass", "env:SAHAM_KEY"],
+                       input=data, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit("Gagal buka/simpan portofolio terenkripsi. Cek secret SAHAM_KEY.")
+    return r.stdout
+
+
+def load_porto(cfg):
+    """Portofolio dari file terenkripsi. Kalau belum ada tapi SAHAM_KEY sudah diisi,
+    pindahkan portofolio dari config.json ke file terenkripsi (sekali saja)."""
+    key = os.environ.get("SAHAM_KEY", "").strip()
+    if os.path.exists(ENC_FILE):
+        if not key:
+            raise SystemExit("Secret SAHAM_KEY belum diisi.")
+        return json.loads(_openssl(["-d"], open(ENC_FILE).read().strip()))
+    porto = cfg.get("portofolio", [])
+    if key and porto:
+        save_porto(porto)
+        cfg.pop("portofolio")
+        json.dump(cfg, open(CFG_FILE, "w"), indent=2)
+        print("Portofolio dipindah ke file terenkripsi.")
+    return porto
+
+
+def save_porto(porto):
+    open(ENC_FILE, "w").write(_openssl([], json.dumps(porto)) + "\n")
 
 
 def quote(symbol, today):
@@ -70,7 +103,7 @@ def main():
     state = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {}
     if state.get("tgl") != tgl:
         state.update({"tgl": tgl, "alert": {}})
-    porto = [p for p in cfg["portofolio"] if p["lot"] > 0]
+    porto = [p for p in load_porto(cfg) if p["lot"] > 0]
     q = {}
     for p in porto:
         r = quote(p["kode"] + ".JK", today)
@@ -137,11 +170,16 @@ def main():
         ringkasan("Ringkasan saham hari ini")
         state["ringkasan"] = tgl
 
-    out = {"diperbarui": now.strftime("%d/%m/%Y %H:%M WIB"), "rows": rows, "total": {
-        "modal": tot_modal, "nilai": tot_nilai, "laba": tot_nilai - tot_modal, "hari_ini": tot_hari},
+    # dashboard publik: hanya kode saham & persentase, tanpa lot / harga beli / Rupiah
+    pub_rows = [{"kode": r["kode"], "harga": r["harga"], "chg": r["chg"], "laba_pct": r["laba_pct"],
+                 "bobot": round(r["nilai"] / tot_nilai * 100, 1) if tot_nilai else 0} for r in rows]
+    pub_seri = [[d, round((v / tot_modal - 1) * 100, 2)] for d, v in seri] if tot_modal else []
+    out = {"diperbarui": now.strftime("%d/%m/%Y %H:%M WIB"), "rows": pub_rows, "total": {
+        "laba_pct": round((tot_nilai / tot_modal - 1) * 100, 2) if tot_modal else 0,
+        "hari_ini_pct": round(tot_hari / (tot_nilai - tot_hari) * 100, 2) if tot_nilai - tot_hari else 0},
         "ihsg": {"harga": ihsg["harga"], "chg": round(ihsg["chg"], 2),
                  "riwayat": ihsg["riwayat"]} if ihsg else None,
-        "seri": seri, "repo": "javanic-triyo/Kantong-bot"}
+        "seri": pub_seri, "repo": "javanic-triyo/Kantong-bot"}
     os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
     json.dump(out, open(DATA_FILE, "w"), separators=(",", ":"))
     json.dump(state, open(STATE_FILE, "w"), indent=1)

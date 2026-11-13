@@ -35,19 +35,18 @@ jobs:
       - name: Ubah portofolio lalu hitung ulang
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          KODE: ${{ github.event.inputs.kode }}
-          LOT: ${{ github.event.inputs.lot }}
-          HARGA_BELI: ${{ github.event.inputs.harga_beli }}
+          SAHAM_KEY: ${{ secrets.SAHAM_KEY }}
         run: |
           git config user.name "kantong-bot"
           git config user.email "kantong-bot@users.noreply.github.com"
           for attempt in 1 2 3 4; do
             git pull -q --rebase origin main || true
+            # input dibaca ubah.py langsung dari file event (bukan env) supaya tidak tercetak di log publik
             (cd saham && python ubah.py) || exit 1
             python saham/bot_saham.py || true
-            git add saham/config.json saham/state.json docs/saham_data.json
+            git add saham/config.json saham/portofolio.enc saham/state.json docs/saham_data.json
             git diff --cached --quiet && exit 0
-            git commit -q -m "ubah portofolio: $KODE $LOT lot"
+            git commit -q -m "ubah portofolio"
             if git push -q origin HEAD:main; then exit 0; fi
             git reset -q --hard HEAD~1
           done

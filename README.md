@@ -74,4 +74,4 @@ Bukan trading, hanya pemantauan. Workflow **Kantong Saham** jalan setiap 30 meni
 - Ringkasan portofolio + IHSG setelah jam 16:00 WIB.
 - Dashboard: https://javanic-triyo.github.io/Kantong-bot/saham.html
 
-Portofolio ada di `saham/config.json`. Ubah dari HP lewat workflow **Saham - Ubah Portofolio** (kode, lot total, harga beli rata-rata; lot 0 = hapus). Harga dari Yahoo Finance (tertunda ±15 menit).
+Karena repo ini publik, lot dan harga beli disimpan **terenkripsi** di `saham/portofolio.enc` (kunci: secret `SAHAM_KEY`). Dashboard hanya menampilkan persentase; angka Rupiah hanya dikirim ke ntfy. Ubah dari HP lewat workflow **Saham - Ubah Portofolio** (kode, lot total, harga beli rata-rata; lot 0 = hapus). Harga dari Yahoo Finance (tertunda ±15 menit).

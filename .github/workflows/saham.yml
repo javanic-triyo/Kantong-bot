@@ -33,13 +33,15 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           TEST_NOTIF: ${{ github.event.inputs.test == 'true' && '1' || '0' }}
+          SAHAM_KEY: ${{ secrets.SAHAM_KEY }}
         run: |
           git config user.name "kantong-bot"
           git config user.email "kantong-bot@users.noreply.github.com"
           for attempt in 1 2 3 4; do
             git pull -q --rebase origin main || true
             python saham/bot_saham.py || exit 1
-            git add saham/state.json docs/saham_data.json
+            git add saham/state.json docs/saham_data.json saham/config.json
+            [ -f saham/portofolio.enc ] && git add saham/portofolio.enc
             git diff --cached --quiet && exit 0
             git commit -q -m "update saham $(TZ=Asia/Jakarta date '+%d/%m %H:%M')"
             if git push -q origin HEAD:main; then exit 0; fi
