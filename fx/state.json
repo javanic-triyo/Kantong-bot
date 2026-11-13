@@ -3,29 +3,38 @@
  "pair": {
   "EURUSD": {
    "last_ts": 1794534300,
-   "R": 0.574,
+   "R": 0.493,
    "lampu_now": "merah",
-   "chg24": -0.29,
+   "chg24": -0.3,
    "px": 1.1065618991851807,
-   "R_pip": 64,
+   "R_pip": 55,
    "asia": null
   },
   "GBPUSD": {
    "last_ts": 1794534300,
-   "R": 0.54,
+   "R": 0.469,
    "lampu_now": "merah",
-   "chg24": -0.28,
+   "chg24": -0.32,
    "px": 1.3238019943237305,
-   "R_pip": 71,
+   "R_pip": 62,
    "asia": null
   },
   "USDJPY": {
    "last_ts": 1794534300,
-   "R": 0.544,
+   "R": 0.654,
    "lampu_now": "hijau",
-   "chg24": 0.18,
+   "chg24": 0.12,
    "px": 159.88800048828125,
-   "R_pip": 87,
+   "R_pip": 105,
+   "asia": null
+  },
+  "USDIDR": {
+   "last_ts": 1794529800,
+   "R": 0.374,
+   "lampu_now": "hijau",
+   "chg24": -0.36,
+   "px": 18063.0,
+   "R_pip": 68,
    "asia": null
   }
  },
@@ -36,7 +45,8 @@
    "posisi": {
     "EURUSD": null,
     "GBPUSD": null,
-    "USDJPY": null
+    "USDJPY": null,
+    "USDIDR": null
    },
    "riwayat": []
   },
@@ -45,12 +55,13 @@
    "posisi": {
     "EURUSD": null,
     "GBPUSD": null,
-    "USDJPY": null
+    "USDJPY": null,
+    "USDIDR": null
    },
    "riwayat": []
   }
  },
- "terakhir_cek": "13/11/2026 09:12 WIB",
+ "terakhir_cek": "13/11/2026 09:13 WIB",
  "histori": [
   {
    "t": 1794535798,
