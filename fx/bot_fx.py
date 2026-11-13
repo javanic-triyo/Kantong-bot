@@ -43,7 +43,7 @@ class FetchError(Exception):
 
 
 def fetch(pair):
-    """Candle 15 menit 30 hari terakhir dari Yahoo Finance (hanya candle yang sudah selesai)."""
+    """Candle 15 menit 60 hari terakhir dari Yahoo Finance (hanya candle yang sudah selesai)."""
     last = ""
     simbol = [f"{pair}=X", f"{pair[3:]}=X"] if pair.startswith("USD") else [f"{pair}=X"]   # USDIDR=X / IDR=X
     for n, wait in enumerate((0, 5, 20)):
@@ -51,7 +51,7 @@ def fetch(pair):
             time.sleep(wait)
         host = "query1" if wait != 5 else "query2"
         url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/{simbol[n % len(simbol)]}"
-               "?interval=15m&range=30d")
+               "?interval=15m&range=60d")
         out = subprocess.run(["curl", "-s", "-m", "30", "-A", "Mozilla/5.0", url],
                              capture_output=True, text=True).stdout
         try:
@@ -97,7 +97,8 @@ def daily_range(c):
     days = {}
     for x in c:
         days.setdefault(datetime.fromtimestamp(x["Time"], WIB).date(), []).append(x)
-    full = [v for v in days.values() if len(v) >= 80]
+    maks = max(len(v) for v in days.values())
+    full = [v for v in days.values() if len(v) >= 0.8 * maks]   # USD/IDR: jam aktifnya lebih pendek
     if not full:
         return 0.6
     return statistics.median((max(k["High"] for k in v) / min(k["Low"] for k in v) - 1) * 100 for v in full)
