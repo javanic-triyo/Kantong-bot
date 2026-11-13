@@ -1,10 +1,13 @@
 {
   "portofolio": [
-    {"kode": "GIAA", "lot": 29, "harga_beli": 49},
-    {"kode": "JAST", "lot": 5, "harga_beli": 68},
-    {"kode": "ADHI", "lot": 2, "harga_beli": 133},
-    {"kode": "BRIS", "lot": 1, "harga_beli": 1135},
-    {"kode": "BBRI", "lot": 1, "harga_beli": 3050}
+    {"kode": "ADHI", "lot": 2, "harga_beli": 454},
+    {"kode": "BBRI", "lot": 1, "harga_beli": 4850},
+    {"kode": "BRIS", "lot": 1, "harga_beli": 1555},
+    {"kode": "GIAA", "lot": 29, "harga_beli": 85},
+    {"kode": "JAST", "lot": 5, "harga_beli": 111},
+    {"kode": "KLBF", "lot": 1, "harga_beli": 2140},
+    {"kode": "NICL", "lot": 4, "harga_beli": 294},
+    {"kode": "RGAS", "lot": 2, "harga_beli": 268}
   ],
   "alert_persen": 5,
   "jam_ringkasan_wib": 16
