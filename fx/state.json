@@ -29,10 +29,10 @@
    "asia": null
   },
   "USDIDR": {
-   "last_ts": 1794608100,
+   "last_ts": 1794609000,
    "R": 0.374,
    "lampu_now": "hijau",
-   "chg24": 0.81,
+   "chg24": 0.25,
    "px": 18149.0,
    "R_pip": 68,
    "asia": null
@@ -96,7 +96,7 @@
    ]
   }
  },
- "terakhir_cek": "14/11/2026 05:47 WIB",
+ "terakhir_cek": "14/11/2026 06:02 WIB",
  "histori": [
   {
    "t": 1794535798,
