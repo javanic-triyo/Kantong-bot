@@ -62,3 +62,7 @@ Risiko maks 1% modal per trade. Lot dihitung dari jarak cut loss dan dibulatkan 
 Dashboard: https://javanic-triyo.github.io/Kantong-bot/fx.html
 
 Strategi FX ini **belum di-backtest**. Paper trading inilah tesnya. Ini bukan saran keuangan.
+
+### Trading manual FX (kantong ke-3)
+
+Modal pura-pura $1.000 untuk keputusanmu sendiri. Tombol **BUY / SELL / TUTUP** di dashboard FX membuka workflow **FX Trade Manual**: pilih pair, BUY/SELL/TUTUP, lot (mulai 0.01), cut loss dan target dalam pip (boleh kosong). Harga eksekusi = harga terakhir Yahoo Finance + spread. Cut loss/target dicek bot setiap 15 menit. Satu posisi per pair.

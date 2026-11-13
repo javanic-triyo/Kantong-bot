@@ -1,0 +1,66 @@
+name: FX Trade Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      pair:
+        description: "Pair"
+        type: choice
+        options: [EUR/USD, GBP/USD, USD/JPY, USD/IDR]
+      aksi:
+        description: "BUY (tebak naik), SELL (tebak turun), atau TUTUP posisi"
+        type: choice
+        options: [BUY, SELL, TUTUP]
+      lot:
+        description: "Lot (0.01 = micro lot). Diabaikan kalau TUTUP"
+        type: string
+        default: "0.01"
+      cut_loss_pip:
+        description: "Cut loss berapa pip? (kosongkan = tanpa cut loss)"
+        type: string
+        default: ""
+      target_pip:
+        description: "Target berapa pip? (kosongkan = tanpa target)"
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kantong-fx-manual
+  cancel-in-progress: false
+
+jobs:
+  trade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Eksekusi trade manual FX (paper)
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          PAIR: ${{ github.event.inputs.pair }}
+          AKSI: ${{ github.event.inputs.aksi }}
+          LOT: ${{ github.event.inputs.lot }}
+          CUT_LOSS_PIP: ${{ github.event.inputs.cut_loss_pip }}
+          TARGET_PIP: ${{ github.event.inputs.target_pip }}
+        run: |
+          git config user.name "kantong-bot"
+          git config user.email "kantong-bot@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git pull -q --rebase origin main || true
+            python fx/manual_fx.py || exit 1
+            git add fx/state.json docs/fx_data.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "fx manual: $AKSI $PAIR"
+            if git push -q origin HEAD:main; then exit 0; fi
+            echo "push ditolak, ulang dengan state terbaru..."
+            git reset -q --hard HEAD~1
+          done
+          exit 1

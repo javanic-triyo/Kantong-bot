@@ -118,6 +118,22 @@
   </section>
 
   <section class="card">
+    <h2>Trading manual kamu (paper)</h2>
+    <p class="small">Modal pura-pura $1.000 terpisah. Keputusan 100% dari kamu.</p>
+    <div class="btns"><a class="btn buy" id="btnfx" target="_blank" rel="noopener">BUY / SELL / TUTUP</a></div>
+    <details>
+      <summary>Cara pakai</summary>
+      <ol class="steps">
+        <li>Tombol membuka halaman GitHub. Login kalau diminta.</li>
+        <li>Tap <b>Run workflow</b>, pilih pair dan BUY / SELL / TUTUP.</li>
+        <li>Isi lot (mulai 0.01), cut loss dan target dalam pip. Contoh EUR/USD: cut loss 30, target 60. Untuk USD/IDR 1 pip = Rp1.</li>
+        <li>Tap <b>Run workflow</b> hijau. Sekitar 30 detik kemudian ada notifikasi di ntfy.</li>
+        <li>Cut loss dan target dicek bot setiap 15 menit. Satu posisi per pair; mau ganti, TUTUP dulu.</li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="card">
     <h2>Riwayat trade</h2>
     <div class="scroll"><table id="riwayat"></table></div>
   </section>
@@ -138,6 +154,7 @@
 const SERIES = [
   { key: "trend",    label: "Trend 2 arah",    color: "var(--series-1)" },
   { key: "breakout", label: "Breakout London", color: "var(--series-2)" },
+  { key: "manual",   label: "Manual kamu",     color: "var(--series-3)" },
 ];
 const usd = x => x == null ? "-" : (x < 0 ? "-" : "") + "$" + Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct = (x, d = 1) => (x > 0 ? "+" : "") + x.toFixed(d).replace(".", ",") + "%";
@@ -202,7 +219,7 @@ function render(d) {
   const st = document.getElementById("stale");
   if (d.pasar_tutup) { st.hidden = false; st.textContent = "Pasar forex sedang tutup (weekend atau libur). Bot lanjut otomatis saat pasar buka Senin pagi."; }
   const tiles = document.getElementById("tiles"); tiles.textContent = "";
-  SERIES.forEach(s => { const v = d.sekarang[s.key], ch = (v / d.modal - 1) * 100;
+  SERIES.filter(s => d.sekarang[s.key] != null).forEach(s => { const v = d.sekarang[s.key], ch = (v / d.modal - 1) * 100;
     const t = el("div"); t.className = "tile"; const lb = el("div"); lb.className = "lbl"; const k = el("span"); k.className = "key"; k.style.background = s.color;
     lb.append(k, s.label); const val = el("div", {}, usd(v)); val.className = "val"; const pc = el("div", {}, pct(ch) + " dari modal " + usd(d.modal)); pc.className = "pct " + cls(ch);
     t.append(lb, val, pc); tiles.append(t); });
@@ -222,7 +239,8 @@ function render(d) {
   table("posisi", ["Kantong", "Pair", "Arah", "Lot", "Masuk", "Sekarang", "Pip", "Untung/rugi"], d.posisi.map(p => [p.kantong.split(" ")[0], p.pair, p.arah,
     p.lot.toFixed(2), fpx(p.harga, p.pair) + " · " + p.waktu, fpx(p.sekarang, p.pair), colored((p.pip > 0 ? "+" : "") + p.pip, p.pip),
     colored(usd(p.laba), p.laba)]), [3, 5, 6, 7]);
-  const HS = { TP: "Target", SL: "Cut loss", TUTUP: "Tutup 22:00" };
+  const HS = { TP: "Target", SL: "Cut loss", TUTUP: "Tutup 22:00", MANUAL: "Kamu tutup" };
+  document.getElementById("btnfx").href = `https://github.com/${d.repo || "javanic-triyo/Kantong-bot"}/actions/workflows/fx-manual.yml`;
   const short = k => k.split(" ")[0];
   table("riwayat", ["Waktu", "Kantong", "Pair", "Arah", "Hasil", "Pip", "Untung/rugi"], d.riwayat.slice(-30).reverse().map(r => [r.waktu, short(r.kantong),
     r.pair, r.arah, HS[r.hasil] || r.hasil, colored((r.pip > 0 ? "+" : "") + r.pip, r.pip), colored(usd(r.laba), r.laba)]), [5, 6]);

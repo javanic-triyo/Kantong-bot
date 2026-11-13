@@ -34,7 +34,7 @@ WIB = timezone(timedelta(hours=7))
 BAR = 900            # 15 menit
 LONG = 800           # EMA ~8 hari trading
 SLOPE = 96           # bandingkan dengan 1 hari trading sebelumnya
-KANTONG = {"trend": "Trend 2 arah", "breakout": "Breakout London"}
+KANTONG = {"trend": "Trend 2 arah", "breakout": "Breakout London", "manual": "Manual kamu"}
 
 
 # ---------------------------------------------------------------- data
@@ -178,7 +178,7 @@ def open_pos(state, kid, pair, arah, px_bid, sl, tp, tstr, alasan):
     if lot < 0.01:
         return False
     kt["posisi"][pair] = {"arah": arah, "harga": entry, "sl": sl, "tp": tp, "lot": lot, "units": units,
-                          "waktu": tstr}
+                          "waktu": tstr, "ts": int(time.time())}
     risk = abs(to_usd(pair, (entry - sl) * units, sl))
     gain = abs(to_usd(pair, (tp - entry) * units, tp))
     pips = lambda a, b: abs(a - b) / pip(pair)
@@ -200,7 +200,7 @@ def close_pos(state, kid, pair, px, hasil, tstr):
     kt["riwayat"].append({"pair": nama(pair), "arah": p["arah"], "beli": p["harga"], "waktu_buka": p["waktu"],
                           "tutup": px, "hasil": hasil, "lot": p["lot"], "laba": round(laba, 2),
                           "pip": round(gerak / pip(pair), 1), "waktu": tstr})
-    judul = {"TP": "TARGET TERCAPAI", "SL": "CUT LOSS", "TUTUP": "TUTUP 22:00"}[hasil]
+    judul = {"TP": "TARGET TERCAPAI", "SL": "CUT LOSS", "TUTUP": "TUTUP 22:00", "MANUAL": "KAMU TUTUP"}[hasil]
     notify(f"FX {judul} - {nama(pair)} · {KANTONG[kid]} (paper)",
            f"{p['arah']} {p['lot']:.2f} lot dari {fmt_px(pair, p['harga'])} -> {fmt_px(pair, px)} ({tstr} WIB)\n"
            f"{'Untung' if laba >= 0 else 'Rugi'} {usd(abs(laba))} ({gerak / pip(pair):+.0f} pip)\n"
@@ -208,22 +208,23 @@ def close_pos(state, kid, pair, px, hasil, tstr):
            "white_check_mark" if laba >= 0 else "stop_sign", 4)
 
 
-def check_exit(state, kid, pair, o, h, l, c, tstr):
-    """Cek cut loss dulu (lebih aman), lalu target. Harga Yahoo = bid; posisi SELL ditutup di ask."""
+def check_exit(state, kid, pair, t, o, h, l, c, tstr):
+    """Cek cut loss dulu (lebih aman), lalu target. Harga Yahoo = bid; posisi SELL ditutup di ask.
+    Candle yang mulai sebelum posisi dibuka dilewati (harga sebelum entry tidak dihitung)."""
     p = state["kantong"][kid]["posisi"].get(pair)
-    if not p:
+    if not p or t < p.get("ts", 0) - BAR:
         return False
-    s = spread(pair)
+    s = spread(pair); sl, tp = p.get("sl"), p.get("tp")
     if p["arah"] == "BUY":
-        if l <= p["sl"]:
-            close_pos(state, kid, pair, min(p["sl"], o), "SL", tstr); return True
-        if h >= p["tp"]:
-            close_pos(state, kid, pair, p["tp"], "TP", tstr); return True
+        if sl and l <= sl:
+            close_pos(state, kid, pair, min(sl, o), "SL", tstr); return True
+        if tp and h >= tp:
+            close_pos(state, kid, pair, tp, "TP", tstr); return True
     else:
-        if h + s >= p["sl"]:
-            close_pos(state, kid, pair, max(p["sl"], o + s), "SL", tstr); return True
-        if l + s <= p["tp"]:
-            close_pos(state, kid, pair, p["tp"], "TP", tstr); return True
+        if sl and h + s >= sl:
+            close_pos(state, kid, pair, max(sl, o + s), "SL", tstr); return True
+        if tp and l + s <= tp:
+            close_pos(state, kid, pair, tp, "TP", tstr); return True
     return False
 
 
@@ -258,7 +259,7 @@ def process_pair(pair, c, state):
 
         # ---- exit dulu
         for kid in KANTONG:
-            if check_exit(state, kid, pair, O[i], H[i], L[i], C[i], tstr) and kid == "trend":
+            if check_exit(state, kid, pair, T[i], O[i], H[i], L[i], C[i], tstr) and kid == "trend":
                 info["trend_last_exit"] = T[i]
         bp = state["kantong"]["breakout"]["posisi"].get(pair)
         if bp and (jam >= CFG["tutup_semua_wib"] or tc.date().isoformat() != bp.get("tgl")):
@@ -340,11 +341,19 @@ def equity(state, kid, last_px):
     return total
 
 
-def write_dashboard(state, last_px, last_t, now_wib, seri):
+def write_dashboard(state, last_px, last_t, now_wib, seri=None, catat_histori=True):
     hist = state.setdefault("histori", [])
     now = int(time.time())
     eq = {kid: round(equity(state, kid, last_px), 2) for kid in KANTONG}
-    if not hist or now - hist[-1]["t"] >= 3600 - 120:
+    lama = {}
+    if os.path.exists(DATA_FILE):
+        try:
+            lama = json.load(open(DATA_FILE))
+        except ValueError:
+            pass
+    if seri is None:                                   # trade manual: pakai grafik terakhir
+        seri = lama.get("seri", {})
+    if catat_histori and (not hist or now - hist[-1]["t"] >= 3600 - 120):
         hist.append({"t": now, **eq})
     pairs = []
     for p, info in state["pair"].items():
@@ -364,11 +373,11 @@ def write_dashboard(state, last_px, last_t, now_wib, seri):
     riwayat = []
     for kid in KANTONG:
         riwayat += [{"kantong": KANTONG[kid], **r} for r in state["kantong"][kid]["riwayat"]]
-    pasar_tutup = now - (max(last_t.values()) + BAR) > 3 * 3600 if last_t else False
+    pasar_tutup = now - (max(last_t.values()) + BAR) > 3 * 3600 if last_t else lama.get("pasar_tutup", False)
     out = {"diperbarui": now_wib.strftime("%d/%m/%Y %H:%M WIB"), "mulai": state["mulai"],
            "modal": CFG["modal_usd"], "risiko": CFG["risiko_persen"], "sekarang": eq,
            "nama_kantong": KANTONG, "histori": hist, "pair": pairs, "posisi": posisi,
-           "riwayat": riwayat[-60:], "seri": seri, "dec": {nama(p): desimal(p) for p in CFG["pairs"]}, "pasar_tutup": pasar_tutup}
+           "riwayat": riwayat[-60:], "seri": seri, "repo": "javanic-triyo/Kantong-bot", "dec": {nama(p): desimal(p) for p in CFG["pairs"]}, "pasar_tutup": pasar_tutup}
     os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
     json.dump(out, open(DATA_FILE, "w"), separators=(",", ":"))
 
@@ -418,6 +427,8 @@ def main():
                f"2. Breakout London: tembus range Asia setelah 14:00 WIB, tutup {CFG['tutup_semua_wib']}:00 WIB.\n"
                f"Pair: {', '.join(nama(p) for p in data)}. Risiko {CFG['risiko_persen']:g}% per trade.\n"
                "Ini simulasi, tidak ada uang asli.", "robot,dollar", 4)
+    for k in KANTONG:                              # kantong baru (mis. manual) ditambahkan ke state lama
+        state["kantong"].setdefault(k, {"saldo": float(CFG["modal_usd"]), "posisi": {}, "riwayat": []})
     last_px = {}; last_t = {}; seri = {}
     for p, c in data.items():
         if p not in state["pair"]:                 # pair baru: mulai dari candle terakhir (tanpa trade masa lalu)
