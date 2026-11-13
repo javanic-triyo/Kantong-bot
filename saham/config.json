@@ -1,0 +1,11 @@
+{
+  "portofolio": [
+    {"kode": "GIAA", "lot": 29, "harga_beli": 49},
+    {"kode": "JAST", "lot": 5, "harga_beli": 68},
+    {"kode": "ADHI", "lot": 2, "harga_beli": 133},
+    {"kode": "BRIS", "lot": 1, "harga_beli": 1135},
+    {"kode": "BBRI", "lot": 1, "harga_beli": 3050}
+  ],
+  "alert_persen": 5,
+  "jam_ringkasan_wib": 16
+}

@@ -1,0 +1,49 @@
+name: Kantong Saham
+
+# Pantau portofolio saham setiap 30 menit selama jam bursa (Senin-Jumat), ringkasan setelah pasar tutup.
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Kirim notifikasi tes?"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "5,35 2-9 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kantong-saham
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cek portofolio
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TEST_NOTIF: ${{ github.event.inputs.test == 'true' && '1' || '0' }}
+        run: |
+          git config user.name "kantong-bot"
+          git config user.email "kantong-bot@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git pull -q --rebase origin main || true
+            python saham/bot_saham.py || exit 1
+            git add saham/state.json docs/saham_data.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "update saham $(TZ=Asia/Jakarta date '+%d/%m %H:%M')"
+            if git push -q origin HEAD:main; then exit 0; fi
+            git reset -q --hard HEAD~1
+            export TEST_NOTIF=0
+          done
+          exit 1

@@ -66,3 +66,12 @@ Strategi FX ini **belum di-backtest**. Paper trading inilah tesnya. Ini bukan sa
 ### Trading manual FX (kantong ke-3)
 
 Modal pura-pura $1.000 untuk keputusanmu sendiri. Tombol **BUY / SELL / TUTUP** di dashboard FX membuka workflow **FX Trade Manual**: pilih pair, BUY/SELL/TUTUP, lot (mulai 0.01), cut loss dan target dalam pip (boleh kosong). Harga eksekusi = harga terakhir Yahoo Finance + spread. Cut loss/target dicek bot setiap 15 menit. Satu posisi per pair.
+
+## Kantong Saham (pantau portofolio BEI)
+
+Bukan trading, hanya pemantauan. Workflow **Kantong Saham** jalan setiap 30 menit di jam bursa (Senin–Jumat):
+- Notifikasi kalau saham kamu naik/turun ≥5% dari penutupan kemarin.
+- Ringkasan portofolio + IHSG setelah jam 16:00 WIB.
+- Dashboard: https://javanic-triyo.github.io/Kantong-bot/saham.html
+
+Portofolio ada di `saham/config.json`. Ubah dari HP lewat workflow **Saham - Ubah Portofolio** (kode, lot total, harga beli rata-rata; lot 0 = hapus). Harga dari Yahoo Finance (tertunda ±15 menit).

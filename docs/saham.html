@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kantong Saham · Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface-1: #fcfcfb; --border: rgba(11,11,11,0.10);
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7;
+    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+    --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+    --up: #006300; --down: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface-1: #1a1a19; --border: rgba(255,255,255,0.10);
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835;
+      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+      --up: #0ca30c; --down: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text-primary);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 16px 14px 40px; }
+  h1 { font-size: 22px; margin: 4px 0 2px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin: 0 0 16px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+          padding: 14px; margin-bottom: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .tile .val { font-size: 19px; } .tile .pct { font-size: 12px; } }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .tile .lbl { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; }
+  .key { width: 14px; height: 3px; border-radius: 2px; flex: none; }
+  .tile .val { font-size: 22px; font-weight: 650; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .tile .pct { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--text-secondary); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  #chart { position: relative; }
+  #chart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
+         border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.12);
+         min-width: 170px; display: none; z-index: 2; }
+  .tip .t { color: var(--text-secondary); margin-bottom: 4px; }
+  .tip .row { display: flex; align-items: center; gap: 8px; }
+  .tip .row b { font-variant-numeric: tabular-nums; }
+  .tip .row .n { color: var(--text-secondary); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--text-secondary); font-weight: 500; padding: 6px 6px; border-bottom: 1px solid var(--grid); }
+  td { padding: 7px 6px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  td.r, th.r { text-align: right; }
+  .scroll { overflow-x: auto; }
+  .lamp { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  details summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; margin-top: 8px; }
+  .small { color: var(--text-secondary); font-size: 12px; }
+  .empty { color: var(--muted); font-size: 13px; }
+  .btns { display: flex; gap: 10px; margin: 4px 0 12px; }
+  .btn { flex: 1; text-align: center; padding: 12px; border-radius: 10px; font-weight: 600; text-decoration: none;
+         border: 1px solid var(--border); color: var(--text-primary); background: var(--page); }
+  .btn.buy { border-color: var(--good); } .btn.sell { border-color: var(--critical); }
+  .cash { font-size: 14px; margin: 0 0 10px; }
+  ol.steps { margin: 6px 0 0 18px; padding: 0; color: var(--text-secondary); font-size: 13px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .seg button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+                border: 1px solid var(--border); background: var(--page); color: var(--text-secondary); }
+  .seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+  .pricehead { display: flex; align-items: baseline; gap: 10px; margin: 2px 0 6px; flex-wrap: wrap; }
+  .pricehead .big { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  #pchart { position: relative; }
+  #pchart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .mlegend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+  .mlegend span { display: inline-flex; align-items: center; gap: 5px; }
+  .stale { border: 1px solid var(--warning); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin: 0 0 14px; }
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Kantong Saham</h1>
+  <p class="sub" id="sub">Portofolio saham BEI · memuat data…</p>
+  <p class="sub"><a href="./" style="color:var(--series-1)">← Crypto</a> · <a href="fx.html" style="color:var(--series-1)">FX</a></p>
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <h2>Saham kamu</h2>
+    <div class="scroll"><table id="porto"></table></div>
+    <div class="btns" style="margin-top:12px"><a class="btn buy" id="btnubah" target="_blank" rel="noopener">Ubah portofolio</a></div>
+    <details>
+      <summary>Cara ubah portofolio</summary>
+      <ol class="steps">
+        <li>Tombol membuka halaman GitHub. Tap <b>Run workflow</b>.</li>
+        <li>Isi kode saham, jumlah lot <b>total</b> sekarang, dan harga beli rata-rata (lihat di aplikasi sekuritas kamu).</li>
+        <li>Lot 0 = hapus saham dari daftar. Saham baru wajib isi harga beli.</li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Nilai portofolio 3 bulan</h2>
+    <div id="chart"></div>
+    <p class="note">Dihitung dengan jumlah lot sekarang × harga penutupan tiap hari.</p>
+  </section>
+
+  <section class="card">
+    <h2>Top gainer, loser &amp; IPO</h2>
+    <p class="small">Belum otomatis. Sementara buka sumber resminya:</p>
+    <ul class="steps">
+      <li><a style="color:var(--series-1)" href="https://www.idx.co.id/id/data-pasar/ringkasan-perdagangan/ringkasan-saham/" target="_blank" rel="noopener">Ringkasan saham BEI (urutkan berdasarkan perubahan)</a></li>
+      <li><a style="color:var(--series-1)" href="https://www.e-ipo.co.id/" target="_blank" rel="noopener">e-IPO: saham yang sedang dan akan IPO</a></li>
+    </ul>
+  </section>
+
+  <footer>Harga dari Yahoo Finance, tertunda ±15 menit. Untung/rugi belum dipotong fee jual. Bukan saran investasi.</footer>
+</main>
+<script>
+const rp = x => x == null ? "-" : (x < 0 ? "-" : "") + "Rp" + Math.round(Math.abs(x)).toLocaleString("id-ID");
+const pct = (x, d = 1) => (x > 0 ? "+" : "") + x.toFixed(d).replace(".", ",") + "%";
+const cls = x => x > 0.005 ? "up" : x < -0.005 ? "down" : "flat";
+const el = (tag, attrs = {}, text) => { const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text != null) e.textContent = text; return e; };
+const NS = "http://www.w3.org/2000/svg";
+const colored = (t, x) => { const s = el("span", {}, t); s.className = cls(x); return s; };
+function table(id, head, rows, right = []) {
+  const t = document.getElementById(id); t.textContent = "";
+  if (!rows.length) { const tr = el("tr"), td = el("td", {}, "Belum ada."); td.className = "empty"; td.colSpan = head.length; tr.append(td); t.append(tr); return; }
+  const thr = el("tr"); head.forEach((h, i) => { const th = el("th", {}, h); if (right.includes(i)) th.className = "r"; thr.append(th); }); t.append(thr);
+  rows.forEach(r => { const tr = el("tr"); r.forEach((c, i) => { const td = el("td"); if (right.includes(i)) td.className = "r";
+    if (c instanceof Node) td.append(c); else td.textContent = c; tr.append(td); }); t.append(tr); });
+}
+function lineChart(box, xs, lines, opts = {}) {
+  box.textContent = "";
+  const W = Math.max(320, box.clientWidth), Ht = W < 500 ? 220 : 270;
+  const m = { l: opts.ml || 56, r: 12, t: 10, b: 24 }, iw = W - m.l - m.r, ih = Ht - m.t - m.b;
+  const vals = lines.flatMap(l => l.v).concat(opts.extra || []).filter(v => v != null);
+  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const t0 = xs[0], t1 = xs[xs.length - 1] || t0 + 1;
+  const x = t => m.l + (t1 > t0 ? (t - t0) / (t1 - t0) * iw : iw / 2), y = v => m.t + (hi - v) / (hi - lo) * ih;
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", `0 0 ${W} ${Ht}`);
+  const add = (tag, a) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); svg.append(e); return e; };
+  if (opts.band) { const [a, b] = opts.band; add("rect", { x: m.l, width: iw, y: y(Math.max(a, b)), height: Math.abs(y(a) - y(b)), fill: "var(--series-2)", opacity: 0.13 }); }
+  for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4;
+    add("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: "var(--grid)" });
+    add("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)" }).textContent = opts.fy(v); }
+  if (opts.zero != null) add("line", { x1: m.l, x2: m.l + iw, y1: y(opts.zero), y2: y(opts.zero), stroke: "var(--axis)", "stroke-width": 1.5, "stroke-dasharray": "4 4" });
+  const fx = t => new Date(t * 1000).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "short" });
+  [0, 0.5, 1].forEach((f, i) => { const t = t0 + (t1 - t0) * f;
+    add("text", { x: x(t), y: Ht - 6, "text-anchor": ["start", "middle", "end"][i], "font-size": 11, fill: "var(--muted)" }).textContent = fx(t); });
+  lines.forEach(l => { let d = ""; l.v.forEach((v, i) => { if (v == null) return; d += (d ? "L" : "M") + x(xs[i]).toFixed(1) + " " + y(v).toFixed(1); });
+    add("path", { d, fill: "none", stroke: l.color, "stroke-width": l.w || 2, "stroke-dasharray": l.dash || "", "stroke-linejoin": "round" }); });
+  box.append(svg);
+}
+
+
+let DATA;
+function tile(label, val, sub, x) {
+  const t = el("div"); t.className = "tile"; const lb = el("div", {}, label); lb.className = "lbl";
+  const v = el("div", {}, val); v.className = "val"; const p = el("div", {}, sub); p.className = "pct " + (x == null ? "" : cls(x));
+  t.append(lb, v, p); return t;
+}
+function render(d) {
+  DATA = d; const T = d.total;
+  document.getElementById("sub").textContent = `Portofolio saham BEI · diperbarui ${d.diperbarui}`;
+  const tiles = document.getElementById("tiles"); tiles.textContent = "";
+  tiles.append(tile("Nilai portofolio", rp(T.nilai), "modal " + rp(T.modal)),
+    tile("Untung/rugi", rp(T.laba), T.modal ? pct(T.laba / T.modal * 100) : "", T.laba),
+    tile("Hari ini", rp(T.hari_ini), T.nilai ? pct(T.hari_ini / (T.nilai - T.hari_ini) * 100, 2) : "", T.hari_ini));
+  if (d.ihsg) tiles.append(tile("IHSG", Math.round(d.ihsg.harga).toLocaleString("id-ID"), pct(d.ihsg.chg, 2) + " hari ini", d.ihsg.chg));
+  table("porto", ["Kode", "Lot", "Harga", "Hari ini", "Beli", "Untung"], d.rows.map(r => [r.kode, r.lot,
+    rp(r.harga), colored(pct(r.chg), r.chg), rp(r.beli), colored(pct(r.laba_pct), r.laba)]), [1, 2, 3, 4, 5]);
+  document.getElementById("btnubah").href = `https://github.com/${d.repo}/actions/workflows/saham-ubah.yml`;
+  const s = d.seri; if (s.length > 1) {
+    const xs = s.map(p => Date.parse(p[0]) / 1000);
+    lineChart(document.getElementById("chart"), xs, [{ v: s.map(p => p[1]), color: "var(--series-1)" }],
+      { fy: v => "Rp" + Math.round(v / 1000) + "rb", zero: T.modal, extra: [T.modal], ml: 64 });
+  }
+}
+fetch("saham_data.json?" + Date.now()).then(r => r.json()).then(render)
+  .catch(() => { document.getElementById("sub").textContent = "Data belum ada. Bot saham belum jalan pertama kali."; });
+addEventListener("resize", () => DATA && render(DATA));
+</script>
+</body>
+</html>

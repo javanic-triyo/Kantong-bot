@@ -1,0 +1,54 @@
+name: Saham - Ubah Portofolio
+
+on:
+  workflow_dispatch:
+    inputs:
+      kode:
+        description: "Kode saham (mis. BBRI)"
+        type: string
+      lot:
+        description: "Jumlah lot sekarang (total). 0 = hapus"
+        type: string
+      harga_beli:
+        description: "Harga beli rata-rata (kosongkan kalau tidak berubah)"
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kantong-saham
+  cancel-in-progress: false
+
+jobs:
+  ubah:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ubah portofolio lalu hitung ulang
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          KODE: ${{ github.event.inputs.kode }}
+          LOT: ${{ github.event.inputs.lot }}
+          HARGA_BELI: ${{ github.event.inputs.harga_beli }}
+        run: |
+          git config user.name "kantong-bot"
+          git config user.email "kantong-bot@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git pull -q --rebase origin main || true
+            (cd saham && python ubah.py) || exit 1
+            python saham/bot_saham.py || true
+            git add saham/config.json saham/state.json docs/saham_data.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "ubah portofolio: $KODE $LOT lot"
+            if git push -q origin HEAD:main; then exit 0; fi
+            git reset -q --hard HEAD~1
+          done
+          exit 1
