@@ -30,7 +30,7 @@
    "R": 0.654,
    "lampu_now": "hijau",
    "chg24": 0.12,
-   "px": 159.8939971923828,
+   "px": 159.88800048828125,
    "R_pip": 105,
    "asia": [
     160.18800354003906,
@@ -72,7 +72,16 @@
   "manual": {
    "saldo": 999.061056370588,
    "posisi": {
-    "USDJPY": null,
+    "USDJPY": {
+     "arah": "BUY",
+     "harga": 159.90200048828126,
+     "sl": 159.70200048828127,
+     "tp": null,
+     "lot": 0.01,
+     "units": 1000.0,
+     "waktu": "13/11 16:47",
+     "ts": 1794563223
+    },
     "EURUSD": null,
     "GBPUSD": null,
     "USDIDR": null
