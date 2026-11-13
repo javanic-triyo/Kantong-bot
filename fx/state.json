@@ -24,7 +24,7 @@
    "R": 0.654,
    "lampu_now": "hijau",
    "chg24": 0.08,
-   "px": 159.86599731445312,
+   "px": 159.88999938964844,
    "R_pip": 105,
    "asia": null
   },
@@ -57,6 +57,22 @@
     "GBPUSD": null,
     "USDJPY": null,
     "USDIDR": null
+   },
+   "riwayat": []
+  },
+  "manual": {
+   "saldo": 1000.0,
+   "posisi": {
+    "USDJPY": {
+     "arah": "BUY",
+     "harga": 159.90399938964845,
+     "sl": 159.75399938964844,
+     "tp": null,
+     "lot": 0.01,
+     "units": 1000.0,
+     "waktu": "13/11 09:22",
+     "ts": 1794536551
+    }
    },
    "riwayat": []
   }
