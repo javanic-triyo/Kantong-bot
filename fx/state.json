@@ -2,40 +2,41 @@
  "mulai": "13/11/2026 09:09 WIB",
  "pair": {
   "EURUSD": {
-   "last_ts": 1794888000,
+   "last_ts": 1794888900,
    "R": 0.494,
    "lampu_now": "merah",
-   "chg24": -0.08,
-   "px": 1.101078987121582,
+   "chg24": -0.06,
+   "px": 1.1009578704833984,
    "R_pip": 54,
    "asia": null,
    "breakout_tgl": "2026-11-16"
   },
   "GBPUSD": {
-   "last_ts": 1794888000,
+   "last_ts": 1794888900,
    "R": 0.467,
    "lampu_now": "merah",
-   "chg24": -0.08,
-   "px": 1.3194701671600342,
+   "chg24": -0.07,
+   "px": 1.3194178342819214,
    "R_pip": 62,
    "asia": null,
    "breakout_tgl": "2026-11-16"
   },
   "USDJPY": {
-   "last_ts": 1794888000,
+   "last_ts": 1794888900,
    "R": 0.675,
    "lampu_now": "hijau",
-   "chg24": -0.24,
-   "px": 159.23500061035156,
-   "R_pip": 108,
-   "asia": null
+   "chg24": -0.31,
+   "px": 159.16099548339844,
+   "R_pip": 107,
+   "asia": null,
+   "trend_last_exit": 1794888900
   },
   "USDIDR": {
    "last_ts": 1794888000,
    "R": 0.374,
    "lampu_now": "hijau",
-   "chg24": 1.35,
-   "px": 18255.0,
+   "chg24": 0.63,
+   "px": 18126.0,
    "R_pip": 68,
    "asia": null
   }
@@ -43,23 +44,27 @@
  "ringkasan_terakhir": "2026-11-16",
  "kantong": {
   "trend": {
-   "saldo": 1000.0,
+   "saldo": 990.1626047503127,
    "posisi": {
     "EURUSD": null,
     "GBPUSD": null,
-    "USDJPY": {
-     "arah": "BUY",
-     "harga": 159.7240067138672,
-     "sl": 159.2019625039747,
-     "tp": 160.76809513365217,
-     "lot": 0.03,
-     "units": 3000.0,
-     "waktu": "16/11 07:30",
-     "ts": 1794789121
-    },
+    "USDJPY": null,
     "USDIDR": null
    },
-   "riwayat": []
+   "riwayat": [
+    {
+     "pair": "USD/JPY",
+     "arah": "BUY",
+     "beli": 159.7240067138672,
+     "waktu_buka": "16/11 07:30",
+     "tutup": 159.2019625039747,
+     "hasil": "SL",
+     "lot": 0.03,
+     "laba": -9.84,
+     "pip": -52.2,
+     "waktu": "17/11 11:30"
+    }
+   ]
   },
   "breakout": {
    "saldo": 1002.178810729981,
@@ -132,7 +137,7 @@
    ]
   }
  },
- "terakhir_cek": "17/11/2026 11:17 WIB",
+ "terakhir_cek": "17/11/2026 11:32 WIB",
  "histori": [
   {
    "t": 1794535798,
