@@ -2,32 +2,32 @@
  "mulai": "13/11/2026 09:09 WIB",
  "pair": {
   "EURUSD": {
-   "last_ts": 1795036500,
+   "last_ts": 1795037400,
    "R": 0.496,
    "lampu_now": "merah",
-   "chg24": -0.27,
-   "px": 1.0974539518356323,
+   "chg24": -0.24,
+   "px": 1.0976948738098145,
    "R_pip": 54,
    "asia": null,
    "breakout_tgl": "2026-11-18"
   },
   "GBPUSD": {
-   "last_ts": 1795036500,
+   "last_ts": 1795037400,
    "R": 0.469,
    "lampu_now": "merah",
-   "chg24": -0.46,
-   "px": 1.3147169351577759,
+   "chg24": -0.44,
+   "px": 1.3150107860565186,
    "R_pip": 62,
    "asia": null,
    "breakout_tgl": "2026-11-18",
    "trend_last_exit": 1794992400
   },
   "USDJPY": {
-   "last_ts": 1795036500,
+   "last_ts": 1795037400,
    "R": 0.654,
    "lampu_now": "hijau",
-   "chg24": -0.0,
-   "px": 159.36900329589844,
+   "chg24": 0.0,
+   "px": 159.3730010986328,
    "R_pip": 104,
    "asia": null,
    "trend_last_exit": 1794888900,
@@ -205,7 +205,7 @@
    ]
   }
  },
- "terakhir_cek": "19/11/2026 04:32 WIB",
+ "terakhir_cek": "19/11/2026 04:47 WIB",
  "histori": [
   {
    "t": 1794535798,
