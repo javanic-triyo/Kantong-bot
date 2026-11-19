@@ -13,10 +13,10 @@
   "XRPIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 5.14,
    "lampu_now": "merah",
-   "chg24": -0.2,
+   "chg24": -1.0,
    "last_warn_ts": 1794675600,
    "dilewati_merah": 6,
    "last_red_ts": 1794780000,
@@ -27,12 +27,12 @@
   "UAIIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 25.0,
    "dilewati_merah": 6,
    "last_red_ts": 1794740400,
    "lampu_now": "merah",
-   "chg24": 1.3,
+   "chg24": 0.2,
    "last_warn_ts": 1794727800,
    "last_bounce_ts": 1794736800,
    "bounce_low": 543,
@@ -41,10 +41,10 @@
   "HYPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 6.51,
    "lampu_now": "merah",
-   "chg24": -0.7,
+   "chg24": -1.0,
    "last_warn_ts": 1795015800,
    "dilewati_merah": 5,
    "last_red_ts": 1795025700,
@@ -55,7 +55,7 @@
   "PEPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 8.7,
    "lampu_now": "merah",
    "chg24": 1.1,
@@ -69,10 +69,10 @@
   "SOLIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 5.46,
    "lampu_now": "merah",
-   "chg24": 0.4,
+   "chg24": -0.3,
    "R_asli": 5.46,
    "last_warn_ts": 1794664800,
    "dilewati_merah": 6,
@@ -83,7 +83,7 @@
   "ANOAIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 11.38,
    "R_asli": 11.38,
    "lampu_now": "merah",
@@ -96,16 +96,16 @@
   "PIEVERSEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795070700,
+   "last_ts": 1795071600,
    "R": 19.75,
    "R_asli": 19.75,
    "lampu_now": "merah",
-   "chg24": 18.1
+   "chg24": 19.2
   }
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-18",
- "terakhir_cek": "19/11/2026 14:01 WIB",
+ "terakhir_cek": "19/11/2026 14:16 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 0.0,
