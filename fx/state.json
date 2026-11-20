@@ -34,7 +34,7 @@
    "breakout_tgl": "2026-11-20"
   },
   "USDIDR": {
-   "last_ts": 1795208400,
+   "last_ts": 1795213800,
    "R": 0.374,
    "lampu_now": "hijau",
    "chg24": 0.18,
@@ -301,7 +301,7 @@
    ]
   }
  },
- "terakhir_cek": "21/11/2026 05:32 WIB",
+ "terakhir_cek": "21/11/2026 05:47 WIB",
  "histori": [
   {
    "t": 1794535798,
