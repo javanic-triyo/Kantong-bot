@@ -117,7 +117,7 @@
     <h2>Status koin</h2>
     <div class="scroll"><table id="koin"></table></div>
     <p class="small">Lampu: 🟢 Hijau = boleh beli penuh · 🟡 Kuning = setengah porsi · 🔴 Merah = tidak beli.
-      R = rata-rata naik-turun harian.</p>
+      Likuiditas "Sepi" = volume 24 jam &lt; Rp500 jt, spread &gt; 2%, atau order beli dalam 5% &lt; Rp50 jt: harga gampang dibanting, bot utama tidak beli.</p>
   </section>
 
   <section class="card">
@@ -341,12 +341,17 @@ function render(d) {
     d.histori.slice().reverse().map(p => [fmtTime(p.t), rp(p.bot), rp(p.dh), rp(p.hold)]
       .concat(SERIES.length > 3 ? [p.manual == null ? "-" : rp(p.manual)] : [])), [1, 2, 3, 4]);
   // koin
-  table("koin", ["Koin", "Harga", "24 jam", "Lampu", "R"],
+  table("koin", ["Koin", "Harga", "24 jam", "Lampu", "Likuiditas"],
     d.koin.map(k => {
       const [c, lbl] = LAMP[k.lampu] || ["var(--muted)", "-"];
       const lamp = el("span", { class: "lamp" }); const dot = el("span", { class: "dot" }); dot.style.background = c;
       lamp.append(dot, document.createTextNode(lbl));
-      return [k.nama, rp(k.harga), k.chg24 == null ? "-" : colored(pct(k.chg24), k.chg24), lamp, k.R ? k.R.toFixed(1).replace(".", ",") + "%" : "-"];
+      const q = k.liq || {};
+      const liq = el("span", { class: "small" });
+      if (q.spread == null && q.vol24 == null) liq.textContent = "-";
+      else liq.textContent = (q.sepi ? "⚠️ Sepi · " : "OK · ") + "spread " + (q.spread == null ? "-" : q.spread.toFixed(1).replace(".", ",") + "%")
+        + " · vol " + (q.vol24 == null ? "-" : (q.vol24 >= 1e9 ? (q.vol24 / 1e9).toFixed(1).replace(".", ",") + " M" : Math.round(q.vol24 / 1e6) + " jt"));
+      return [k.nama, rp(k.harga), k.chg24 == null ? "-" : colored(pct(k.chg24), k.chg24), lamp, liq];
     }), [1, 2]);
   // posisi
   table("posisi", ["Koin", "Beli", "Sekarang", "Target", "Cut loss", "Modal"],

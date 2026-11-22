@@ -58,6 +58,43 @@ def fetch(sym, days=FETCH_DAYS):
     return closed
 
 
+def likuiditas(coins):
+    """Volume 24 jam, spread, dan kedalaman order book dari Indodax. Gagal = None (tidak menghentikan bot)."""
+    out = {}
+    try:
+        tick = _get_json("https://indodax.com/api/summaries")["tickers"]
+    except FetchError:
+        tick = {}
+    for sym in coins:
+        pair = sym[:-3].lower()
+        info = {"vol24": None, "spread": None, "depth5": None, "bid": None, "ask": None}
+        t = tick.get(pair + "_idr")
+        if t:
+            info["vol24"] = float(t.get("vol_idr", 0))
+        try:
+            d = _get_json(f"https://indodax.com/api/depth/{pair}idr")
+            bids = [(float(p), float(q)) for p, q in d.get("buy", [])]
+            asks = [(float(p), float(q)) for p, q in d.get("sell", [])]
+            if bids and asks:
+                bid, ask = bids[0][0], asks[0][0]
+                info.update(bid=bid, ask=ask, spread=(ask - bid) / ((ask + bid) / 2) * 100,
+                            depth5=sum(p * q for p, q in bids if p >= bid * 0.95))
+        except FetchError:
+            pass
+        L = CFG.get("likuiditas", {})
+        alasan = []
+        if info["vol24"] is not None and info["vol24"] < L.get("vol24_min", 5e8):
+            alasan.append(f"volume 24j {rp(info['vol24'])}")
+        if info["spread"] is not None and info["spread"] > L.get("spread_maks", 2.0):
+            alasan.append(f"spread {info['spread']:.1f}%")
+        if info["depth5"] is not None and info["depth5"] < L.get("depth5_min", 5e7):
+            alasan.append(f"order beli (5%) cuma {rp(info['depth5'])}")
+        info["sepi"] = bool(alasan)
+        info["alasan"] = ", ".join(alasan)
+        out[sym] = info
+    return out
+
+
 def ema(vals, n):
     k = 2 / (n + 1); out = []; e = None
     for v in vals:
@@ -139,7 +176,13 @@ def equity(state, last_px):
 
 
 # ---------------------------------------------------------------- inti
-def process_coin(sym, c, btc_by_ts, k, dh, state):
+def process_coin(sym, c, btc_by_ts, k, dh, state, liq=None):
+    liq = liq or {}
+    sepi = bool(liq.get("sepi"))
+    # slip = setengah spread saat ini (dibatasi 5%): beli sedikit lebih mahal, jual sedikit lebih murah
+    slip = min((liq.get("spread") or 0) / 200, 0.05)
+    sepi_txt = (f"\n⚠️ KOIN SEPI ({liq.get('alasan')}): harga gampang 'dibanting', pakai uang kecil & limit order."
+                if sepi else "")
     C = [x["Close"] for x in c]; H = [x["High"] for x in c]
     L = [x["Low"] for x in c]; O = [x["Open"] for x in c]
     T = [x["Time"] for x in c]
@@ -166,7 +209,7 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
         if p:
             hasil = None
             if L[i] <= p["sl"]:
-                px = min(p["sl"], O[i]); hasil = "SL"
+                px = min(p["sl"], O[i]) * (1 - slip); hasil = "SL"
             elif H[i] >= p["tp"]:
                 px = p["tp"]; hasil = "TP"
             if hasil:
@@ -218,7 +261,7 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
                    f"Harga {rp(C[i])} ({tstr} WIB), turun {turun:.1f}% dari high 24 jam ({rp(hi24)}), "
                    f"titik terendah baru 24 jam.\n"
                    f"Belum ada tanda mantul (skor bounce {score}/4), tunggu alert bounce.\n"
-                   f"Lampu {lampu_txt}.", "warning", 3)
+                   f"Lampu {lampu_txt}." + sepi_txt, "warning", 3)
         if not sinyal:
             continue
 
@@ -227,7 +270,7 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
         porsi = CFG["dip_hold_porsi"]
         if dh["cash"] >= porsi and T[i] - dh.get("last_buy_ts", 0) >= CFG["dip_hold_jeda_jam"] * 3600:
             dh["cash"] -= porsi
-            dh["qty"] += porsi * (1 - FEE) / C[i]
+            dh["qty"] += porsi * (1 - FEE) / (C[i] * (1 + slip))
             dh["last_buy_ts"] = T[i]
             dh["beli"].append({"harga": C[i], "waktu": tstr})
             avg = (CFG["modal_per_koin"] - dh["cash"]) * (1 - FEE) / dh["qty"]
@@ -240,6 +283,8 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
             alasan = "bot utama sudah pegang koin ini"
         elif T[i] - k.get("last_sig_ts", 0) < 4 * BAR:
             alasan = "bot utama baru saja beli"
+        elif sepi:
+            alasan = "bot utama tidak beli karena koin sedang sepi"
         elif merah:
             alasan = "bot utama tidak beli karena tren sedang turun"
             if T[i] - k.get("last_red_ts", 0) >= 16 * BAR:        # hitung maks 1x per 4 jam
@@ -253,9 +298,10 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
             else:
                 k["last_sig_ts"] = T[i]
                 k["cash"] -= modal
-                qty = modal * (1 - FEE) / C[i]
-                k["posisi"] = {"harga": C[i], "qty": qty, "modal": modal, "tp": C[i] * (1 + tp),
-                               "sl": C[i] * (1 - sl), "waktu": tstr, "lampu": "hijau" if hijau else "kuning"}
+                ent = C[i] * (1 + slip)
+                qty = modal * (1 - FEE) / ent
+                k["posisi"] = {"harga": ent, "qty": qty, "modal": modal, "tp": ent * (1 + tp),
+                               "sl": ent * (1 - sl), "waktu": tstr, "lampu": "hijau" if hijau else "kuning"}
                 lampu = "HIJAU, porsi penuh" if hijau else "KUNING, setengah porsi"
                 notify(f"SINYAL BELI - {name(sym)} (paper)",
                        f"Harga {rp(C[i])} ({tstr} WIB)\nLampu {lampu}: {rp(modal)}\n"
@@ -275,7 +321,7 @@ def process_coin(sym, c, btc_by_ts, k, dh, state):
                    f"(skor bounce {score}/4).\nLampu {lampu_txt}: {alasan}.\n"
                    f"Batas gagal: kalau harga turun di bawah {rp(min(L[max(0, i - 15):i + 1]))}, mantulnya gagal.\n"
                    + (dh_txt + "\n" if dh_txt else "")
-                   + "Mau ikut? Pakai tombol Beli di dashboard (kantong manual).",
+                   + "Mau ikut? Pakai tombol Beli di dashboard (kantong manual)." + sepi_txt,
                    "white_check_mark", 4 if not merah else 3)
         elif dh_txt:
             notify(f"DIP & HOLD: beli {name(sym)} (paper)", f"Harga {rp(C[i])} ({tstr} WIB). {dh_txt}",
@@ -324,7 +370,7 @@ def write_dashboard(state, last_px, now_wib, catat_histori=True, seri=None):
     for s, k in state["koin"].items():
         d = state["dip_hold"][s]
         koin.append({"nama": name(s), "harga": last_px[s], "chg24": k.get("chg24"), "lampu": k.get("lampu_now"),
-                     "R": k.get("R"), "posisi": k["posisi"],
+                     "R": k.get("R"), "posisi": k["posisi"], "liq": k.get("liq"),
                      "dh_beli": len(d["beli"]), "dh_qty": d["qty"], "dh_cash": d["cash"],
                      "dh_modal": CFG["modal_per_koin"] - d["cash"]})
     dh_beli = []
@@ -415,6 +461,24 @@ def main():
                f"{rp(CFG['dip_hold_porsi'])} per koin (maks 1x per {CFG['dip_hold_jeda_jam']} jam) "
                "lalu hold, tidak pernah dijual.\nHasilnya dibandingkan dengan bot utama di ringkasan harian.",
                "shopping_cart", 3)
+    liq = likuiditas(list(data))
+    for s, info in liq.items():
+        kk = state["koin"].get(s)
+        if kk is None or info["spread"] is None and info["vol24"] is None:
+            continue
+        sebelum = bool(kk.get("sepi"))
+        if sebelum != info["sepi"]:
+            if info["sepi"]:
+                notify(f"KOIN SEPI - {name(s)}",
+                       f"{name(s)} sekarang sepi: {info['alasan']}.\nHarga bisa 'dibanting' oleh satu transaksi kecil. "
+                       "Bot utama berhenti beli koin ini sampai ramai lagi. Kalau trading manual, pakai limit order.",
+                       "warning", 3)
+            else:
+                notify(f"KOIN RAMAI LAGI - {name(s)}",
+                       f"{name(s)} cukup likuid lagi (volume 24j {rp(info['vol24'] or 0)}, spread "
+                       f"{(info['spread'] or 0):.1f}%). Bot utama boleh beli lagi.", "white_check_mark", 2)
+        kk["sepi"] = info["sepi"]
+        kk["liq"] = {x: (float(f"{v:.6g}") if isinstance(v, float) else v) for x, v in info.items()}
     last_px = {}; seri = {}
     for s, c in data.items():
         if s not in state["koin"]:      # koin baru ditambahkan di config
@@ -422,7 +486,8 @@ def main():
             state["harga_awal"][s] = c[-1]["Close"]
         if s not in state["dip_hold"]:
             state["dip_hold"][s] = {"cash": float(CFG["modal_per_koin"]), "qty": 0.0, "beli": []}
-        last_px[s], seri[name(s)] = process_coin(s, c, btc_by_ts, state["koin"][s], state["dip_hold"][s], state)
+        last_px[s], seri[name(s)] = process_coin(s, c, btc_by_ts, state["koin"][s], state["dip_hold"][s], state,
+                                                 liq.get(s))
     today = now_wib.strftime("%Y-%m-%d")
     if test:
         summary(state, last_px, "Tes notifikasi")

@@ -38,6 +38,15 @@ def main():
                                     "koin": {}, "riwayat": []})
     pos = m["koin"].setdefault(sym, {"qty": 0.0, "modal": 0.0})
     px_all = harga_sekarang(); px = px_all[sym]
+    # harga realistis: beli di harga jual terendah (ask), jual di harga beli tertinggi (bid)
+    try:
+        dep = bot._get_json(f"https://indodax.com/api/depth/{koin.lower()}idr")
+        bid, ask = float(dep["buy"][0][0]), float(dep["sell"][0][0])
+        px = ask if aksi == "beli" else bid
+        spread = (ask - bid) / ((ask + bid) / 2) * 100
+    except Exception:
+        spread = None
+    catatan = (f"\n⚠️ Spread {spread:.1f}%: koin ini sepi, selisih harga beli-jual besar." if spread and spread > 2 else "")
     FEE = bot.FEE
     if aksi == "beli":
         amt = m["cash"] if jumlah in ("", "semua") else angka(jumlah)
@@ -52,7 +61,7 @@ def main():
         avg = pos["modal"] * (1 - FEE) / pos["qty"]
         bot.notify(f"KAMU BELI {koin} (paper)",
                    f"Beli {bot.rp(amt)} di {bot.rp(px)} ({tstr} WIB)\nHarga rata-rata {koin}: {bot.rp(avg)}\n"
-                   f"Sisa dana manual: {bot.rp(m['cash'])}", "shopping_cart", 4)
+                   f"Sisa dana manual: {bot.rp(m['cash'])}" + catatan, "shopping_cart", 4)
     elif aksi == "jual":
         if pos["qty"] <= 0:
             bot.notify("Trade manual gagal", f"Kamu tidak punya {koin} di kantong manual.", "warning", 3); sys.exit(1)
@@ -73,7 +82,7 @@ def main():
         bot.notify(f"KAMU JUAL {koin} (paper)",
                    f"Jual {'semua' if frac == 1 else bot.rp(uang)} di {bot.rp(px)} ({tstr} WIB)\n"
                    f"{'Untung' if laba >= 0 else 'Rugi'} {bot.rp(abs(laba))} ({laba / modal * 100:+.1f}% setelah fee)\n"
-                   f"Dana manual sekarang: {bot.rp(m['cash'])}", "moneybag" if laba >= 0 else "chart_with_downwards_trend", 4)
+                   f"Dana manual sekarang: {bot.rp(m['cash'])}" + catatan, "moneybag" if laba >= 0 else "chart_with_downwards_trend", 4)
     else:
         bot.notify("Trade manual gagal", f"Aksi '{aksi}' tidak dikenal (pakai beli/jual).", "warning", 3); sys.exit(1)
     bot.write_dashboard(state, px_all, now, catat_histori=False)

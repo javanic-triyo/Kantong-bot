@@ -1,5 +1,13 @@
 {
-  "coins": ["XRPIDR", "UAIIDR", "HYPEIDR", "PEPEIDR", "SOLIDR", "ANOAIDR", "PIEVERSEIDR"],
+  "coins": [
+    "XRPIDR",
+    "UAIIDR",
+    "HYPEIDR",
+    "PEPEIDR",
+    "SOLIDR",
+    "ANOAIDR",
+    "PIEVERSEIDR"
+  ],
   "btc_symbol": "BTCIDR",
   "modal_per_koin": 200000,
   "fee_per_sisi": 0.003,
@@ -12,5 +20,10 @@
   "dip_hold_porsi": 50000,
   "dip_hold_jeda_jam": 24,
   "alert_jeda_jam": 12,
-  "bounce_jeda_jam": 8
+  "bounce_jeda_jam": 8,
+  "likuiditas": {
+    "vol24_min": 500000000,
+    "spread_maks": 2.0,
+    "depth5_min": 50000000
+  }
 }
