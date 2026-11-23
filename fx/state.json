@@ -2,43 +2,43 @@
  "mulai": "13/11/2026 09:09 WIB",
  "pair": {
   "EURUSD": {
-   "last_ts": 1795458600,
+   "last_ts": 1795459500,
    "R": 0.496,
    "lampu_now": "merah",
-   "chg24": -0.83,
-   "px": 1.0893245935440063,
+   "chg24": -0.81,
+   "px": 1.0894432067871094,
    "R_pip": 54,
    "asia": null,
    "breakout_tgl": "2026-11-23",
    "trend_last_exit": 1795437900
   },
   "GBPUSD": {
-   "last_ts": 1795458600,
+   "last_ts": 1795459500,
    "R": 0.469,
    "lampu_now": "merah",
-   "chg24": -0.6,
-   "px": 1.3023545742034912,
+   "chg24": -0.56,
+   "px": 1.3025752305984497,
    "R_pip": 61,
    "asia": null,
    "breakout_tgl": "2026-11-23",
    "trend_last_exit": 1795441500
   },
   "USDJPY": {
-   "last_ts": 1795458600,
+   "last_ts": 1795459500,
    "R": 0.697,
-   "lampu_now": "kuning",
-   "chg24": 0.31,
-   "px": 159.17300415039062,
+   "lampu_now": "merah",
+   "chg24": 0.23,
+   "px": 159.12600708007812,
    "R_pip": 111,
    "asia": null,
    "trend_last_exit": 1795449600,
    "breakout_tgl": "2026-11-20"
   },
   "USDIDR": {
-   "last_ts": 1795454100,
+   "last_ts": 1795457700,
    "R": 0.374,
    "lampu_now": "hijau",
-   "chg24": 0.0,
+   "chg24": -0.5,
    "px": 18158.0,
    "R_pip": 68,
    "asia": null
@@ -60,7 +60,16 @@
      "ts": 1795445221
     },
     "GBPUSD": null,
-    "USDJPY": null,
+    "USDJPY": {
+     "arah": "SELL",
+     "harga": 159.12600708007812,
+     "sl": 159.68065070892047,
+     "tp": 158.01671982239338,
+     "lot": 0.02,
+     "units": 2000.0,
+     "waktu": "24/11 02:00",
+     "ts": 1795460522
+    },
     "USDIDR": null
    },
    "riwayat": [
@@ -365,7 +374,7 @@
    ]
   }
  },
- "terakhir_cek": "24/11/2026 01:47 WIB",
+ "terakhir_cek": "24/11/2026 02:02 WIB",
  "histori": [
   {
    "t": 1794535798,
