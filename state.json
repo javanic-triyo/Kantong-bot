@@ -13,10 +13,10 @@
   "XRPIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 5.31,
    "lampu_now": "merah",
-   "chg24": 6.6,
+   "chg24": 5.5,
    "last_warn_ts": 1795231800,
    "dilewati_merah": 8,
    "last_red_ts": 1795266000,
@@ -25,11 +25,11 @@
    "R_asli": 5.31,
    "sepi": false,
    "liq": {
-    "vol24": 9462800000.0,
-    "spread": 0.0665299,
-    "depth5": 2450970000.0,
-    "bid": 18031.0,
-    "ask": 18043.0,
+    "vol24": 9479950000.0,
+    "spread": 0.283467,
+    "depth5": 4936920000.0,
+    "bid": 17966.0,
+    "ask": 18017.0,
     "sepi": false,
     "alasan": ""
    }
@@ -37,34 +37,34 @@
   "UAIIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 13.32,
    "dilewati_merah": 6,
    "last_red_ts": 1794740400,
    "lampu_now": "merah",
-   "chg24": 9.0,
+   "chg24": 9.4,
    "last_warn_ts": 1794727800,
    "last_bounce_ts": 0,
    "bounce_low": null,
    "R_asli": 13.32,
-   "sepi": false,
+   "sepi": true,
    "liq": {
-    "vol24": 1689870000.0,
-    "spread": 0.507185,
-    "depth5": 70077700.0,
-    "bid": 590.0,
-    "ask": 593.0,
-    "sepi": false,
-    "alasan": ""
+    "vol24": 1694800000.0,
+    "spread": 0.674536,
+    "depth5": 43607300.0,
+    "bid": 591.0,
+    "ask": 595.0,
+    "sepi": true,
+    "alasan": "order beli (5%) cuma Rp43.607.323"
    }
   },
   "HYPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 6.96,
    "lampu_now": "merah",
-   "chg24": 5.3,
+   "chg24": 4.5,
    "last_warn_ts": 1795228200,
    "dilewati_merah": 9,
    "last_red_ts": 1795275900,
@@ -73,11 +73,11 @@
    "R_asli": 6.96,
    "sepi": false,
    "liq": {
-    "vol24": 3240660000.0,
-    "spread": 0.000165426,
-    "depth5": 633859000.0,
-    "bid": 1209000.0,
-    "ask": 1209000.0,
+    "vol24": 3256000000.0,
+    "spread": 8.26446e-05,
+    "depth5": 440928000.0,
+    "bid": 1210000.0,
+    "ask": 1210000.0,
     "sepi": false,
     "alasan": ""
    }
@@ -85,7 +85,7 @@
   "PEPEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 9.72,
    "lampu_now": "merah",
    "chg24": 5.0,
@@ -97,11 +97,11 @@
    "bounce_low": 0.059001,
    "sepi": false,
    "liq": {
-    "vol24": 3500880000.0,
-    "spread": 0.222197,
-    "depth5": 1311900000.0,
-    "bid": 0.066084,
-    "ask": 0.066231,
+    "vol24": 3516380000.0,
+    "spread": 0.311599,
+    "depth5": 1410020000.0,
+    "bid": 0.066328,
+    "ask": 0.066535,
     "sepi": false,
     "alasan": ""
    }
@@ -109,10 +109,10 @@
   "SOLIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 6.12,
    "lampu_now": "merah",
-   "chg24": 7.2,
+   "chg24": 6.4,
    "R_asli": 6.12,
    "last_warn_ts": 1795231800,
    "dilewati_merah": 8,
@@ -121,11 +121,11 @@
    "bounce_low": 1203000,
    "sepi": false,
    "liq": {
-    "vol24": 5247440000.0,
-    "spread": 0.0456893,
-    "depth5": 1545690000.0,
-    "bid": 1372000.0,
-    "ask": 1372630.0,
+    "vol24": 5220410000.0,
+    "spread": 0.0166327,
+    "depth5": 1206870000.0,
+    "bid": 1376690.0,
+    "ask": 1376920.0,
     "sepi": false,
     "alasan": ""
    }
@@ -133,11 +133,11 @@
   "ANOAIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 10.75,
    "R_asli": 10.75,
    "lampu_now": "merah",
-   "chg24": 3.2,
+   "chg24": 1.5,
    "dilewati_merah": 9,
    "last_red_ts": 1795326300,
    "last_bounce_ts": 1795400100,
@@ -145,23 +145,23 @@
    "last_warn_ts": 1795391100,
    "sepi": true,
    "liq": {
-    "vol24": 502824000.0,
-    "spread": 0.873975,
-    "depth5": 1067750.0,
-    "bid": 218498.0,
-    "ask": 220416.0,
+    "vol24": 498519000.0,
+    "spread": 0.968315,
+    "depth5": 2090370.0,
+    "bid": 218288.0,
+    "ask": 220412.0,
     "sepi": true,
-    "alasan": "order beli (5%) cuma Rp1.067.754"
+    "alasan": "volume 24j Rp498.519.096, order beli (5%) cuma Rp2.090.373"
    }
   },
   "PIEVERSEIDR": {
    "cash": 200000.0,
    "posisi": null,
-   "last_ts": 1795449600,
+   "last_ts": 1795450500,
    "R": 21.28,
    "R_asli": 21.28,
    "lampu_now": "merah",
-   "chg24": -4.0,
+   "chg24": -8.4,
    "dilewati_merah": 4,
    "last_red_ts": 1795415400,
    "last_bounce_ts": 0,
@@ -169,11 +169,11 @@
    "last_warn_ts": 1795444200,
    "sepi": false,
    "liq": {
-    "vol24": 5428250000.0,
-    "spread": 0.590623,
-    "depth5": 120121000.0,
-    "bid": 63980.0,
-    "ask": 64359.0,
+    "vol24": 5456270000.0,
+    "spread": 0.485996,
+    "depth5": 138352000.0,
+    "bid": 63221.0,
+    "ask": 63529.0,
     "sepi": false,
     "alasan": ""
    }
@@ -181,7 +181,7 @@
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-23",
- "terakhir_cek": "23/11/2026 23:16 WIB",
+ "terakhir_cek": "23/11/2026 23:31 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 0.0,
@@ -3145,6 +3145,14 @@
    "hold": 1367557,
    "modal": 1400000,
    "manual": 926359
+  },
+  {
+   "t": 1795451487,
+   "bot": 1400000,
+   "dh": 1314149,
+   "hold": 1365481,
+   "modal": 1400000,
+   "manual": 924685
   }
  ],
  "manual": {
