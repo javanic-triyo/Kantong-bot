@@ -169,6 +169,26 @@ def notify(title, message, tags="", priority=3):
 
 
 # ---------------------------------------------------------------- posisi
+def rupiah(x):
+    return "Rp" + f"{x:,.0f}".replace(",", ".")
+
+
+def baris_akun_kecil(saldo, units, risk, gain):
+    """Ukuran setara untuk akun kecil (akun cent), supaya risikonya sama persen dengan bot."""
+    ak = CFG.get("akun_kecil")
+    if not ak or saldo <= 0:
+        return ""
+    modal_usd = ak["modal_idr"] / ak["kurs_idr"]
+    skala = modal_usd / saldo
+    u = units * skala
+    cent_lot = u / ak.get("unit_per_cent_lot", 1000)
+    unit_txt = f"{round(u):,}".replace(",", ".")
+    lot_txt = f"{cent_lot:.2f}".replace(".", ",")
+    return (f"\n\n💡 Akun {rupiah(ak['modal_idr'])} (akun cent, kurs {rupiah(ak['kurs_idr'])} = ${modal_usd:,.0f}): "
+            f"sekitar {unit_txt} unit = {lot_txt} cent lot. "
+            f"Risiko -{rupiah(risk * skala * ak['kurs_idr'])}, target +{rupiah(gain * skala * ak['kurs_idr'])}.")
+
+
 def open_pos(state, kid, pair, arah, px_bid, sl, tp, tstr, alasan):
     kt = state["kantong"][kid]
     entry = px_bid + spread(pair) if arah == "BUY" else px_bid        # buy di harga ask, sell di harga bid
@@ -185,7 +205,8 @@ def open_pos(state, kid, pair, arah, px_bid, sl, tp, tstr, alasan):
     notify(f"FX {arah} - {nama(pair)} · {KANTONG[kid]} (paper)",
            f"Harga {fmt_px(pair, entry)} ({tstr} WIB), {lot:.2f} lot\n"
            f"Target: {fmt_px(pair, tp)} ({pips(tp, entry):.0f} pip, +{usd(gain)})\n"
-           f"Cut loss: {fmt_px(pair, sl)} ({pips(sl, entry):.0f} pip, -{usd(risk)})\n{alasan}",
+           f"Cut loss: {fmt_px(pair, sl)} ({pips(sl, entry):.0f} pip, -{usd(risk)})\n{alasan}"
+           + baris_akun_kecil(kt["saldo"], units, risk, gain),
            "chart_with_upwards_trend" if arah == "BUY" else "chart_with_downwards_trend", 4)
     return True
 
@@ -376,6 +397,7 @@ def write_dashboard(state, last_px, last_t, now_wib, seri=None, catat_histori=Tr
     pasar_tutup = now - (max(last_t.values()) + BAR) > 3 * 3600 if last_t else lama.get("pasar_tutup", False)
     out = {"diperbarui": now_wib.strftime("%d/%m/%Y %H:%M WIB"), "mulai": state["mulai"],
            "modal": CFG["modal_usd"], "risiko": CFG["risiko_persen"], "sekarang": eq,
+           "akun_kecil": CFG.get("akun_kecil"),
            "nama_kantong": KANTONG, "histori": hist, "pair": pairs, "posisi": posisi,
            "riwayat": riwayat[-60:], "seri": seri, "repo": "javanic-triyo/Kantong-bot", "dec": {nama(p): desimal(p) for p in CFG["pairs"]}, "pasar_tutup": pasar_tutup}
     os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)

@@ -18,5 +18,7 @@
   "range_min_kali_R": 0.25,
   "range_maks_kali_R": 1.2,
 
-  "jam_ringkasan_wib": 22
+  "jam_ringkasan_wib": 22,
+
+  "akun_kecil": {"modal_idr": 500000, "kurs_idr": 10000, "unit_per_cent_lot": 1000}
 }
