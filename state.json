@@ -25,11 +25,11 @@
    "R_asli": 5.14,
    "sepi": false,
    "liq": {
-    "vol24": 14928700000.0,
-    "spread": 0.0170595,
-    "depth5": 1322060000.0,
-    "bid": 17584.0,
-    "ask": 17587.0,
+    "vol24": 14971200000.0,
+    "spread": 0.00567617,
+    "depth5": 640578000.0,
+    "bid": 17617.0,
+    "ask": 17618.0,
     "sepi": false,
     "alasan": ""
    }
@@ -49,9 +49,9 @@
    "R_asli": 13.26,
    "sepi": false,
    "liq": {
-    "vol24": 2429740000.0,
+    "vol24": 2429060000.0,
     "spread": 0.186047,
-    "depth5": 71766500.0,
+    "depth5": 74781500.0,
     "bid": 537.0,
     "ask": 538.0,
     "sepi": false,
@@ -73,11 +73,11 @@
    "R_asli": 9.11,
    "sepi": false,
    "liq": {
-    "vol24": 4450850000.0,
-    "spread": 0.0818034,
-    "depth5": 787000000.0,
-    "bid": 1129080.0,
-    "ask": 1130000.0,
+    "vol24": 4461760000.0,
+    "spread": 0.394796,
+    "depth5": 706885000.0,
+    "bid": 1131010.0,
+    "ask": 1135480.0,
     "sepi": false,
     "alasan": ""
    }
@@ -99,7 +99,7 @@
    "liq": {
     "vol24": 4036650000.0,
     "spread": 0.0153292,
-    "depth5": 1226640000.0,
+    "depth5": 1213710000.0,
     "bid": 0.06523,
     "ask": 0.06524,
     "sepi": false,
@@ -121,11 +121,11 @@
    "bounce_low": 1211000,
    "sepi": false,
    "liq": {
-    "vol24": 4330720000.0,
-    "spread": 0.220795,
-    "depth5": 1642360000.0,
-    "bid": 1306560.0,
-    "ask": 1309450.0,
+    "vol24": 4328120000.0,
+    "spread": 0.222389,
+    "depth5": 1642350000.0,
+    "bid": 1309310.0,
+    "ask": 1312220.0,
     "sepi": false,
     "alasan": ""
    }
@@ -145,13 +145,13 @@
    "last_warn_ts": 1795391100,
    "sepi": true,
    "liq": {
-    "vol24": 485220000.0,
+    "vol24": 484077000.0,
     "spread": 0.00051436,
     "depth5": 5389960.0,
     "bid": 194416.0,
     "ask": 194417.0,
     "sepi": true,
-    "alasan": "volume 24j Rp485.220.436, order beli (5%) cuma Rp5.389.964"
+    "alasan": "volume 24j Rp484.076.854, order beli (5%) cuma Rp5.389.964"
    }
   },
   "PIEVERSEIDR": {
@@ -169,11 +169,11 @@
    "last_warn_ts": 1795507200,
    "sepi": false,
    "liq": {
-    "vol24": 5201670000.0,
-    "spread": 0.75221,
-    "depth5": 258222000.0,
-    "bid": 68075.0,
-    "ask": 68589.0,
+    "vol24": 5213970000.0,
+    "spread": 0.635114,
+    "depth5": 161074000.0,
+    "bid": 68745.0,
+    "ask": 69183.0,
     "sepi": false,
     "alasan": ""
    }
@@ -181,7 +181,7 @@
  },
  "riwayat": [],
  "ringkasan_terakhir": "2026-11-25",
- "terakhir_cek": "26/11/2026 15:46 WIB",
+ "terakhir_cek": "26/11/2026 15:47 WIB",
  "dip_hold": {
   "XRPIDR": {
    "cash": 0.0,
