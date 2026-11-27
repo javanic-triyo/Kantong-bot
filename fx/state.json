@@ -44,10 +44,10 @@
    "breakout_tgl": "2026-11-26"
   },
   "USDIDR": {
-   "last_ts": 1795761000,
+   "last_ts": 1795762800,
    "R": 0.393,
    "lampu_now": "hijau",
-   "chg24": 0.91,
+   "chg24": 0.95,
    "px": 18370.0,
    "R_pip": 72,
    "asia": null
