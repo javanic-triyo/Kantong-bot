@@ -25,11 +25,11 @@
    "R_asli": 6.39,
    "sepi": false,
    "liq": {
-    "vol24": 6730290000.0,
-    "spread": 0.0503482,
-    "depth5": 937200000.0,
+    "vol24": 6729830000.0,
+    "spread": 0.0559409,
+    "depth5": 1168080000.0,
     "bid": 17871.0,
-    "ask": 17880.0,
+    "ask": 17881.0,
     "sepi": false,
     "alasan": ""
    }
@@ -51,7 +51,7 @@
    "liq": {
     "vol24": 1003280000.0,
     "spread": 0.186741,
-    "depth5": 112671000.0,
+    "depth5": 112319000.0,
     "bid": 535.0,
     "ask": 536.0,
     "sepi": false,
@@ -74,10 +74,10 @@
    "sepi": false,
    "liq": {
     "vol24": 3843780000.0,
-    "spread": 0.120315,
-    "depth5": 591002000.0,
+    "spread": 0.185604,
+    "depth5": 472366000.0,
     "bid": 1212750.0,
-    "ask": 1214210.0,
+    "ask": 1215000.0,
     "sepi": false,
     "alasan": ""
    }
@@ -98,9 +98,9 @@
    "sepi": false,
    "liq": {
     "vol24": 2181710000.0,
-    "spread": 0.14311,
-    "depth5": 923892000.0,
-    "bid": 0.066335,
+    "spread": 0.0918682,
+    "depth5": 1315120000.0,
+    "bid": 0.066369,
     "ask": 0.06643,
     "sepi": false,
     "alasan": ""
@@ -121,11 +121,11 @@
    "bounce_low": 1211000,
    "sepi": false,
    "liq": {
-    "vol24": 3761040000.0,
-    "spread": 0.0561669,
-    "depth5": 1163010000.0,
+    "vol24": 3759480000.0,
+    "spread": 0.0874399,
+    "depth5": 1510910000.0,
     "bid": 1342050.0,
-    "ask": 1342800.0,
+    "ask": 1343220.0,
     "sepi": false,
     "alasan": ""
    }
@@ -146,12 +146,12 @@
    "sepi": true,
    "liq": {
     "vol24": 446636000.0,
-    "spread": 1.40691,
-    "depth5": 7910030.0,
+    "spread": 1.09509,
+    "depth5": 7913510.0,
     "bid": 198888.0,
-    "ask": 201706.0,
+    "ask": 201078.0,
     "sepi": true,
-    "alasan": "volume 24j Rp446.636.333, order beli (5%) cuma Rp7.910.031"
+    "alasan": "volume 24j Rp446.636.333, order beli (5%) cuma Rp7.913.510"
    }
   },
   "PIEVERSEIDR": {
@@ -170,9 +170,9 @@
    "sepi": false,
    "liq": {
     "vol24": 3094930000.0,
-    "spread": 0.221399,
-    "depth5": 146362000.0,
-    "bid": 72639.0,
+    "spread": 0.222775,
+    "depth5": 108795000.0,
+    "bid": 72638.0,
     "ask": 72800.0,
     "sepi": false,
     "alasan": ""
