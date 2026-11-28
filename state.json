@@ -26,9 +26,9 @@
    "sepi": false,
    "liq": {
     "vol24": 3033480000.0,
-    "spread": 0.00575622,
-    "depth5": 2004120000.0,
-    "bid": 17372.0,
+    "spread": 0.0287844,
+    "depth5": 2327060000.0,
+    "bid": 17368.0,
     "ask": 17373.0,
     "sepi": false,
     "alasan": ""
@@ -73,9 +73,9 @@
    "R_asli": 8.62,
    "sepi": false,
    "liq": {
-    "vol24": 2141270000.0,
+    "vol24": 2129470000.0,
     "spread": 8.65543e-05,
-    "depth5": 1041680000.0,
+    "depth5": 1232950000.0,
     "bid": 1155340.0,
     "ask": 1155340.0,
     "sepi": false,
@@ -97,11 +97,11 @@
    "bounce_low": null,
    "sepi": false,
    "liq": {
-    "vol24": 3049450000.0,
-    "spread": 0.0605279,
-    "depth5": 1465670000.0,
-    "bid": 0.062762,
-    "ask": 0.0628,
+    "vol24": 3059350000.0,
+    "spread": 0.156178,
+    "depth5": 1473010000.0,
+    "bid": 0.0627,
+    "ask": 0.062798,
     "sepi": false,
     "alasan": ""
    }
@@ -122,9 +122,9 @@
    "sepi": false,
    "liq": {
     "vol24": 1917390000.0,
-    "spread": 0.01825,
-    "depth5": 1505160000.0,
-    "bid": 1303990.0,
+    "spread": 0.0480858,
+    "depth5": 1875930000.0,
+    "bid": 1303600.0,
     "ask": 1304230.0,
     "sepi": false,
     "alasan": ""
@@ -146,12 +146,12 @@
    "sepi": true,
    "liq": {
     "vol24": 363736000.0,
-    "spread": 4.31801,
-    "depth5": 18515600.0,
-    "bid": 203340.0,
-    "ask": 212314.0,
+    "spread": 4.30305,
+    "depth5": 18501600.0,
+    "bid": 203358.0,
+    "ask": 212301.0,
     "sepi": true,
-    "alasan": "volume 24j Rp363.735.994, spread 4.3%, order beli (5%) cuma Rp18.515.590"
+    "alasan": "volume 24j Rp363.735.994, spread 4.3%, order beli (5%) cuma Rp18.501.592"
    }
   },
   "PIEVERSEIDR": {
@@ -169,11 +169,11 @@
    "last_warn_ts": 1795507200,
    "sepi": false,
    "liq": {
-    "vol24": 2551690000.0,
-    "spread": 0.344293,
-    "depth5": 108252000.0,
-    "bid": 70168.0,
-    "ask": 70410.0,
+    "vol24": 2545670000.0,
+    "spread": 0.910988,
+    "depth5": 159470000.0,
+    "bid": 70589.0,
+    "ask": 71235.0,
     "sepi": false,
     "alasan": ""
    }
